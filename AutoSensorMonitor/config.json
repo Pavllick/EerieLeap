@@ -1,0 +1,47 @@
+{
+  "AdcConfig": {
+    "Type": "ADS7953",
+    "BusId": 0,
+    "ChipSelect": 0,
+    "ClockFrequency": 1000000,
+    "AdditionalSettings": {}
+  },
+  "Sensors": [
+    {
+      "Type": "Temperature",
+      "Name": "Coolant Temperature",
+      "Channel": 0,
+      "MinVoltage": 0.5,
+      "MaxVoltage": 4.5,
+      "MinValue": 0,
+      "MaxValue": 120,
+      "ConversionFactor": 1,
+      "Unit": "\u00B0C",
+      "SamplingRateMs": 1000
+    },
+    {
+      "Type": "Temperature",
+      "Name": "Oil Temperature",
+      "Channel": 1,
+      "MinVoltage": 0.5,
+      "MaxVoltage": 4.5,
+      "MinValue": 0,
+      "MaxValue": 150,
+      "ConversionFactor": 1,
+      "Unit": "\u00B0C",
+      "SamplingRateMs": 1000
+    },
+    {
+      "Type": "Pressure",
+      "Name": "Oil Pressure",
+      "Channel": 2,
+      "MinVoltage": 0.5,
+      "MaxVoltage": 4.5,
+      "MinValue": 0,
+      "MaxValue": 10,
+      "ConversionFactor": 1,
+      "Unit": "bar",
+      "SamplingRateMs": 500
+    }
+  ]
+}

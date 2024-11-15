@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "48uPy/RWvTU=",
+  "success": true,
+  "projectFilePath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitorApp.csproj",
+  "expectedPackageFiles": [
+    "/Users/pavlick/.nuget/packages/metalama.compiler/2024.0.9/metalama.compiler.2024.0.9.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/metalama.framework/2024.0.11/metalama.framework.2024.0.11.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/metalama.framework.redist/2024.0.11/metalama.framework.redist.2024.0.11.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/metalama.framework.runtime/2024.0.6/metalama.framework.runtime.2024.0.6.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/microsoft.aspnetcore.openapi/8.0.0/microsoft.aspnetcore.openapi.8.0.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/microsoft.csharp/4.7.0/microsoft.csharp.4.7.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/microsoft.extensions.apidescription.server/6.0.5/microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/microsoft.openapi/1.4.3/microsoft.openapi.1.4.3.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/swashbuckle.aspnetcore/6.5.0/swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/swashbuckle.aspnetcore.swagger/6.5.0/swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.5.0/swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.5.0/swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/system.collections.immutable/5.0.0/system.collections.immutable.5.0.0.nupkg.sha512",
+    "/Users/pavlick/.nuget/packages/system.device.gpio/3.1.0/system.device.gpio.3.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}
