@@ -21,6 +21,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
     private AdcConfig _adcConfig;
     private IAdc? _adc;
     private Dictionary<string, double> _lastReadings = new();
+    private TaskCompletionSource<bool>? _initializationTcs;
 
     public SensorReadingService(
         ILogger<SensorReadingService> logger, 
@@ -104,17 +105,41 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await LoadConfigs();
-        await InitializeAdcAsync();
-        
-        while (!stoppingToken.IsCancellationRequested)
+        _initializationTcs = new TaskCompletionSource<bool>();
+
+        try
         {
-            await UpdateReadingsAsync(stoppingToken);
-            await Task.Delay(100, stoppingToken);
+            await LoadConfigs().ConfigureAwait(false);
+            await InitializeAdcAsync().ConfigureAwait(false);
+            _initializationTcs.TrySetResult(true);
+            
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await UpdateReadingsAsync().ConfigureAwait(false);
+                    await Task.Delay(1000, stoppingToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating readings");
+                    throw;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _initializationTcs.TrySetException(ex);
+            throw;
         }
     }
 
-    private async Task UpdateReadingsAsync(CancellationToken cancellationToken)
+    public Task WaitForInitializationAsync()
+    {
+        return _initializationTcs?.Task ?? Task.CompletedTask;
+    }
+
+    private async Task UpdateReadingsAsync()
     {
         Dictionary<string, double> newReadings = new();
         IAdc? adc;
@@ -139,7 +164,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                     _logger.LogError("Channel not specified for physical sensor {Name}", sensor.Name);
                     continue;
                 }
-                var voltage = await adc.ReadChannelAsync(sensor.Channel.Value, cancellationToken);
+                var voltage = await adc.ReadChannelAsync(sensor.Channel.Value);
                 newReadings[sensor.Id] = ConvertVoltageToValue(voltage, sensor);
             }
             catch (Exception ex)
@@ -189,19 +214,24 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             if (!File.Exists(adcConfigPath) || !File.Exists(sensorConfigPath))
             {
                 CreateDefaultConfigs();
+                return;
             }
+
+            var options = new JsonSerializerOptions { 
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
 
             var adcJson = await File.ReadAllTextAsync(adcConfigPath);
             var sensorsJson = await File.ReadAllTextAsync(sensorConfigPath);
 
-            var options = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } };
-            _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, options) ?? CreateDefaultAdcConfig();
-            _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, options) ?? CreateDefaultSensorConfigs().ToList();
+            _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, options) ?? throw new JsonException("Failed to deserialize ADC config");
+            _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, options) ?? throw new JsonException("Failed to deserialize sensor configs");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load configurations, using defaults");
-            CreateDefaultConfigs();
+            _logger.LogError(ex, "Failed to load configurations");
+            throw;
         }
     }
 
