@@ -10,8 +10,11 @@ builder.Services.AddSwaggerGen();
 
 // Add our services
 builder.Services.AddSingleton<AdcFactory>();
-builder.Services.AddSingleton<ISensorReadingService, SensorReadingService>();
-builder.Services.AddHostedService<SensorReadingService>();
+
+// Register SensorReadingService as both ISensorReadingService and IHostedService
+builder.Services.AddSingleton<SensorReadingService>();
+builder.Services.AddSingleton<ISensorReadingService>(sp => sp.GetRequiredService<SensorReadingService>());
+builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<SensorReadingService>());
 
 var app = builder.Build();
 

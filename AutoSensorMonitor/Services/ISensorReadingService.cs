@@ -1,12 +1,14 @@
 using AutoSensorMonitor.Configuration;
+using AutoSensorMonitor.Types;
 
 namespace AutoSensorMonitor.Services;
 
 public interface ISensorReadingService
 {
-    Task<Dictionary<string, double>> GetReadingsAsync();
+    Task<IEnumerable<ReadingResult>> GetReadingsAsync();
+    Task<ReadingResult?> GetReadingAsync(string id);
     Task<AdcConfig> GetAdcConfigurationAsync();
-    Task<List<SensorConfig>> GetSensorConfigurationsAsync();
+    Task<IEnumerable<SensorConfig>> GetSensorConfigurationsAsync();
     Task UpdateAdcConfigurationAsync(AdcConfig config);
-    Task UpdateSensorConfigurationsAsync(List<SensorConfig> configs);
+    Task UpdateSensorConfigurationsAsync(IEnumerable<SensorConfig> configs);
 }

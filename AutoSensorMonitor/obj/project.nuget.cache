@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "48uPy/RWvTU=",
+  "dgSpecHash": "HL97fqvf54c=",
   "success": true,
-  "projectFilePath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitorApp.csproj",
+  "projectFilePath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitor.csproj",
   "expectedPackageFiles": [
+    "/Users/pavlick/.nuget/packages/coreclr-ncalc/2.2.113/coreclr-ncalc.2.2.113.nupkg.sha512",
     "/Users/pavlick/.nuget/packages/metalama.compiler/2024.0.9/metalama.compiler.2024.0.9.nupkg.sha512",
     "/Users/pavlick/.nuget/packages/metalama.framework/2024.0.11/metalama.framework.2024.0.11.nupkg.sha512",
     "/Users/pavlick/.nuget/packages/metalama.framework.redist/2024.0.11/metalama.framework.redist.2024.0.11.nupkg.sha512",

@@ -1,8 +1,8 @@
 {
   "Version": 1,
-  "Hash": "4AWrXxu8DyoSFMSkSv0RL+RHfqrRku8Uxjil6tEeK8Q=",
-  "Source": "AutoSensorMonitorApp",
-  "BasePath": "_content/AutoSensorMonitorApp",
+  "Hash": "R7esRAo73wsO1EHtsRdh96QfC6Kjd2VNSfTP9j0N4k0=",
+  "Source": "AutoSensorMonitor",
+  "BasePath": "_content/AutoSensorMonitor",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],

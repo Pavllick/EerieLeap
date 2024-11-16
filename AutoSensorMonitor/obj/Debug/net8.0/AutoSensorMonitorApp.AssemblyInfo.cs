@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AutoSensorMonitorApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e1417085a464cea35921eecf483839bf80710003")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a5fc1943f2a45dc3b4c17acca22e57e2e8dcf464")]
 [assembly: System.Reflection.AssemblyProductAttribute("AutoSensorMonitorApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AutoSensorMonitorApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

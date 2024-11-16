@@ -6,5 +6,6 @@ public enum SensorType
     Pressure,
     Flow,
     Voltage,
-    Current
+    Current,
+    Virtual
 }

@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net8.0": {
+      "CoreCLR-NCalc/2.2.113": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/NCalc.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/NCalc.dll": {}
+        }
+      },
       "Metalama.Compiler/2024.0.9": {
         "type": "package",
         "build": {
@@ -203,6 +212,21 @@
     }
   },
   "libraries": {
+    "CoreCLR-NCalc/2.2.113": {
+      "sha512": "+xwpsdo4p2FgW7tcTnv7sqJI9XVhLLHEj5hU5ftEOpDBZMAcse2Mf+HLG4NQB/I5dHKlVLLChkiYxJziLRyTOg==",
+      "type": "package",
+      "path": "coreclr-ncalc/2.2.113",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "coreclr-ncalc.2.2.113.nupkg.sha512",
+        "coreclr-ncalc.nuspec",
+        "lib/net45/NCalc.dll",
+        "lib/netstandard1.3/NCalc.dll",
+        "lib/netstandard2.0/NCalc.dll"
+      ]
+    },
     "Metalama.Compiler/2024.0.9": {
       "sha512": "PW7EFSeU4hrHV+FUaJ41sh9fPmOF07HY1gGeNjw1oUcM6ArSLIh6rYrVj7b38qdmYKWAF2yNuuX7ePSVBbuA5A==",
       "type": "package",
@@ -1012,6 +1036,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "CoreCLR-NCalc >= 2.2.113",
       "Metalama.Framework >= 2024.0.11",
       "Metalama.Framework.Redist >= 2024.0.11",
       "Microsoft.AspNetCore.OpenApi >= 8.0.0",
@@ -1026,9 +1051,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitorApp.csproj",
-      "projectName": "AutoSensorMonitorApp",
-      "projectPath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitorApp.csproj",
+      "projectUniqueName": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitor.csproj",
+      "projectName": "AutoSensorMonitor",
+      "projectPath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/AutoSensorMonitor.csproj",
       "packagesPath": "/Users/pavlick/.nuget/packages/",
       "outputPath": "/Users/pavlick/reps/cs/codeium_test_1/AutoSensorMonitor/obj/",
       "projectStyle": "PackageReference",
@@ -1065,6 +1090,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "CoreCLR-NCalc": {
+            "target": "Package",
+            "version": "[2.2.113, )"
+          },
           "Metalama.Framework": {
             "target": "Package",
             "version": "[2024.0.11, )"
