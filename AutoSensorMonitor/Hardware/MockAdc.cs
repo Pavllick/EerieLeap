@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AutoSensorMonitor.Configuration;
 
 namespace AutoSensorMonitor.Service.Hardware;
 
@@ -12,16 +13,17 @@ public sealed class MockAdc : IAdc {
         _config = config;
     }
 
-    public Task<double> ReadChannelAsync(int channel) {
+    public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default)
+    {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         if (_config == null) {
             throw new InvalidOperationException("ADC not configured. Call Configure first.");
         }
 
-        // Generate a random voltage between 0.5V and 4.5V
-        var voltage = _random.NextDouble() * 4.0 + 0.5;
-        return Task.FromResult(voltage);
+        return await Task.Run(() => {
+            return _random.NextDouble() * 3.3; // Mock voltage between 0 and 3.3V
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public void Dispose() {

@@ -1,9 +1,12 @@
-using AutoSensorMonitor.Service.Models;
+using AutoSensorMonitor.Configuration;
 
 namespace AutoSensorMonitor.Service.Services;
 
-public interface ISensorReadingService {
-    Task<Dictionary<string, double>> GetCurrentReadingsAsync();
-    Task<SystemConfig> GetConfigurationAsync();
-    Task UpdateConfigurationAsync(SystemConfig config);
+public interface ISensorReadingService
+{
+    Task<Dictionary<string, double>> GetReadingsAsync();
+    Task<AdcConfig> GetAdcConfigurationAsync();
+    Task<List<SensorConfig>> GetSensorConfigurationsAsync();
+    Task UpdateAdcConfigurationAsync(AdcConfig config);
+    Task UpdateSensorConfigurationsAsync(List<SensorConfig> configs);
 }
