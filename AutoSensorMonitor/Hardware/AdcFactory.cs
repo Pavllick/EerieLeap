@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AutoSensorMonitor.Hardware;
 
-public sealed class AdcFactory
+public sealed class AdcFactory : IAdcFactory
 {
     private readonly ILogger<AdcFactory> _logger;
     private readonly ILogger<Adc> _adcLogger;
