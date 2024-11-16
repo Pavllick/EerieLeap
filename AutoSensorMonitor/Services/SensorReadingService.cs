@@ -153,20 +153,19 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
         {
             try
             {
-                if (sensor.Converter?.Type != ConversionType.Virtual || 
-                    string.IsNullOrEmpty(sensor.Converter.Expression))
+                if (string.IsNullOrEmpty(sensor.ConversionExpression))
                 {
-                    _logger.LogWarning("Virtual sensor {Name} has invalid configuration", sensor.Name);
+                    _logger.LogWarning("Virtual sensor {Name} has invalid configuration - missing expression", sensor.Name);
                     continue;
                 }
 
                 // Extract sensor IDs from expression and create value dictionary
-                var sensorIds = ExpressionEvaluator.ExtractSensorIds(sensor.Converter.Expression);
+                var sensorIds = ExpressionEvaluator.ExtractSensorIds(sensor.ConversionExpression);
                 var sensorValues = sensorIds.ToDictionary(id => id, 
                     id => newReadings.TryGetValue(id, out var value) ? value : 0.0);
 
                 newReadings[sensor.Id] = ExpressionEvaluator.EvaluateWithSensors(
-                    sensor.Converter.Expression, 
+                    sensor.ConversionExpression, 
                     sensorValues);
             }
             catch (Exception ex)
@@ -281,11 +280,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                 MaxValue = 150,
                 Unit = "°C",
                 SamplingRateMs = 1000,
-                Converter = new()
-                {
-                    Type = ConversionType.Virtual,
-                    Expression = "({coolant_temp} + {oil_temp}) / 2 * Sin(PI/4)"
-                }
+                ConversionExpression = "({coolant_temp} + {oil_temp}) / 2 * Sin(PI/4)"
             }
         };
     }
@@ -311,12 +306,11 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
 
     private static double ConvertVoltageToValue(double voltage, SensorConfig sensor)
     {
-        if (sensor.Converter?.Type == ConversionType.Expression && 
-            !string.IsNullOrEmpty(sensor.Converter.Expression))
+        if (!string.IsNullOrEmpty(sensor.ConversionExpression))
         {
             try 
             {
-                return ExpressionEvaluator.Evaluate(sensor.Converter.Expression, voltage);
+                return ExpressionEvaluator.Evaluate(sensor.ConversionExpression, voltage);
             }
             catch (Exception ex)
             {
@@ -325,10 +319,18 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             }
         }
         
-        // Default linear conversion
-        var voltageRange = sensor.MaxVoltage - sensor.MinVoltage;
-        var valueRange = sensor.MaxValue - sensor.MinValue;
+        // Ensure all required values are present for linear conversion
+        if (!sensor.MinVoltage.HasValue || !sensor.MaxVoltage.HasValue || 
+            !sensor.MinValue.HasValue || !sensor.MaxValue.HasValue)
+        {
+            throw new InvalidOperationException(
+                $"Sensor {sensor.Name} is missing required voltage or value range configuration");
+        }
         
-        return ((voltage - sensor.MinVoltage) / voltageRange * valueRange) + sensor.MinValue;
+        // Default linear conversion
+        var voltageRange = sensor.MaxVoltage.Value - sensor.MinVoltage.Value;
+        var valueRange = sensor.MaxValue.Value - sensor.MinValue.Value;
+        
+        return ((voltage - sensor.MinVoltage.Value) / voltageRange * valueRange) + sensor.MinValue.Value;
     }
 }
