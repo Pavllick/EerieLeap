@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace AutoSensorMonitor.Service.Hardware;
+namespace AutoSensorMonitor.Hardware;
 
 public sealed class AdcFactory
 {

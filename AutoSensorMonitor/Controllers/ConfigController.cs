@@ -1,10 +1,10 @@
-using AutoSensorMonitor.Service.Services;
-using AutoSensorMonitor.Service.Aspects;
+using AutoSensorMonitor.Services;
+using AutoSensorMonitor.Aspects;
 using AutoSensorMonitor.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace AutoSensorMonitor.Service.Controllers;
+namespace AutoSensorMonitor.Controllers;
 
 [ApiController]
 [Route("api/v1")]
@@ -19,21 +19,6 @@ public class ConfigController : ControllerBase
     {
         _logger = logger;
         _sensorService = sensorService;
-    }
-
-    [HttpGet("readings")]
-    public async Task<ActionResult<Dictionary<string, double>>> GetReadings()
-    {
-        try
-        {
-            var readings = await _sensorService.GetReadingsAsync();
-            return Ok(readings);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get sensor readings");
-            return StatusCode(500, "Failed to get sensor readings");
-        }
     }
 
     [HttpGet("config")]
@@ -118,6 +103,21 @@ public class ConfigController : ControllerBase
         {
             _logger.LogError(ex, "Failed to update sensor configurations");
             return StatusCode(500, "Failed to update sensor configurations");
+        }
+    }
+
+    [HttpGet("readings")]
+    public async Task<ActionResult<Dictionary<string, double>>> GetReadings()
+    {
+        try
+        {
+            var readings = await _sensorService.GetReadingsAsync();
+            return Ok(readings);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get sensor readings");
+            return StatusCode(500, "Failed to get sensor readings");
         }
     }
 }

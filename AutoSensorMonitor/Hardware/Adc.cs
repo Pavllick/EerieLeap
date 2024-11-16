@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using AutoSensorMonitor.Configuration;
 
-namespace AutoSensorMonitor.Service.Hardware;
+namespace AutoSensorMonitor.Hardware;
 
 public sealed class Adc : SpiAdc
 {

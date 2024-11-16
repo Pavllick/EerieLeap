@@ -1,5 +1,5 @@
-using AutoSensorMonitor.Service.Hardware;
-using AutoSensorMonitor.Service.Services;
+using AutoSensorMonitor.Hardware;
+using AutoSensorMonitor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

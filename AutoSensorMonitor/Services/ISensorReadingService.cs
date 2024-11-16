@@ -1,6 +1,6 @@
 using AutoSensorMonitor.Configuration;
 
-namespace AutoSensorMonitor.Service.Services;
+namespace AutoSensorMonitor.Services;
 
 public interface ISensorReadingService
 {

@@ -1,7 +1,7 @@
 using AutoSensorMonitor.Configuration;
 using System.Threading;
 
-namespace AutoSensorMonitor.Service.Hardware;
+namespace AutoSensorMonitor.Hardware;
 
 public interface IAdc : IDisposable 
 {

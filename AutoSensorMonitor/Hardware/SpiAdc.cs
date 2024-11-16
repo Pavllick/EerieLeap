@@ -2,7 +2,7 @@ using System.Device.Spi;
 using Microsoft.Extensions.Logging;
 using AutoSensorMonitor.Configuration;
 
-namespace AutoSensorMonitor.Service.Hardware;
+namespace AutoSensorMonitor.Hardware;
 
 /// <summary>
 /// Base class for SPI-based ADC implementations

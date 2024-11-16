@@ -1,7 +1,7 @@
 using Metalama.Framework.Aspects;
 using System.ComponentModel.DataAnnotations;
 
-namespace AutoSensorMonitor.Service.Aspects;
+namespace AutoSensorMonitor.Aspects;
 
 public class ValidateAttribute : OverrideMethodAspect
 {

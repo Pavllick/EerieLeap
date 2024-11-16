@@ -1,5 +1,5 @@
-using AutoSensorMonitor.Service.Hardware;
-using AutoSensorMonitor.Service.Aspects;
+using AutoSensorMonitor.Hardware;
+using AutoSensorMonitor.Aspects;
 using AutoSensorMonitor.Configuration;
 using AutoSensorMonitor.Types;
 using System.Text.Json;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 
-namespace AutoSensorMonitor.Service.Services;
+namespace AutoSensorMonitor.Services;
 
 public sealed class SensorReadingService : BackgroundService, ISensorReadingService
 {

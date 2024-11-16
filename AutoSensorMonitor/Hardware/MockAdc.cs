@@ -1,7 +1,7 @@
 using System.Text.Json;
 using AutoSensorMonitor.Configuration;
 
-namespace AutoSensorMonitor.Service.Hardware;
+namespace AutoSensorMonitor.Hardware;
 
 public sealed class MockAdc : IAdc {
     private readonly Random _random = new();
