@@ -1,7 +1,7 @@
 {
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "AutoSensorMonitor.Service": {
+    "EerieLeap.Service": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,

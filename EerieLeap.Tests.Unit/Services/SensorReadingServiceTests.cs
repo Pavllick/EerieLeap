@@ -24,7 +24,7 @@ public class SensorReadingServiceTests : IDisposable
     public SensorReadingServiceTests()
     {
         var tempDir = Path.GetTempPath();
-        _testDir = Path.Combine(tempDir, "AutoSensorMonitorTests");
+        _testDir = Path.Combine(tempDir, "EerieLeapTests");
         if (Directory.Exists(_testDir))
         {
             Directory.Delete(_testDir, true);
