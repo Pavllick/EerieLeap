@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AutoSensorMonitor\AutoSensorMonitor.csproj" />
+    <ProjectReference Include="..\EerieLeap\EerieLeap.csproj" />
   </ItemGroup>
 
 </Project>

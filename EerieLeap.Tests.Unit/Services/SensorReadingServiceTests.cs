@@ -8,7 +8,6 @@ using Moq;
 using System.Device.Spi;
 using System.Text.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Unit.Services;
 
