@@ -264,7 +264,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             DataBitLength = 8,
             Resolution = 12,
             ReferenceVoltage = 3.3,
-            Protocol = new AdcProtocol
+            Protocol = new AdcProtocolConfig
             {
                 CommandPrefix = Convert.FromHexString("40"),
                 ChannelBitShift = 2,

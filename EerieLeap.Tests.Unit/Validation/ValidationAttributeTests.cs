@@ -1,6 +1,6 @@
 using EerieLeap.Configuration;
 using EerieLeap.Types;
-using EerieLeap.Validation;
+using EerieLeap.Utilities.DataAnnotations;
 using System.ComponentModel.DataAnnotations;
 using Xunit;
 
