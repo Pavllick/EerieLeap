@@ -94,6 +94,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
         await Task.Run(() => {
             lock (_lock) {
                 _sensorConfigs = configs.ToList();
+                _lastReadings.Clear(); // TODO: Should we clear readings only for changed sensors
                 var json = JsonSerializer.Serialize(_sensorConfigs, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(_configPath, "sensors.json"), json);
             }
