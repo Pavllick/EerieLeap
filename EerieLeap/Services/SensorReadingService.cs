@@ -246,6 +246,10 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             WriteIndented = true,
             Converters = { new JsonStringEnumConverter() }
         };
+
+        // Ensure config directory exists
+        Directory.CreateDirectory(_configPath);
+        
         File.WriteAllText(Path.Combine(_configPath, "adc.json"), 
             JsonSerializer.Serialize(_adcConfig, options));
         File.WriteAllText(Path.Combine(_configPath, "sensors.json"), 

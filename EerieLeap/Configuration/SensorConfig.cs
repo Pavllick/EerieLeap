@@ -1,21 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using EerieLeap.Types;
+using EerieLeap.Utilities;
 using EerieLeap.Utilities.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
 public class SensorConfig
 {
-    private string _id = Guid.NewGuid().ToString("N");
     private string _name = string.Empty;
 
     [Required]
     [RegularExpression("^[a-zA-Z0-9_]+$", ErrorMessage = "Sensor ID can only contain letters, numbers, and underscores")]
-    public string Id 
-    { 
-        get => _id;
-        set => _id = value.ToLower().Replace(" ", "_");
-    }
+    public string Id { get; set; } = IdGenerator.GenerateId();
 
     [Required]
     public string Name
@@ -24,10 +20,8 @@ public class SensorConfig
         set
         {
             _name = value;
-            if (string.IsNullOrEmpty(_id) || _id == Guid.NewGuid().ToString("N"))
-            {
-                Id = value;
-            }
+            if (string.IsNullOrWhiteSpace(Id))
+                Id = IdGenerator.GenerateId(value);
         }
     }
 

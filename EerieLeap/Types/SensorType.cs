@@ -10,5 +10,6 @@ public enum SensorType
     Flow,
     Voltage,
     Current,
+    Physical,
     Virtual
 }

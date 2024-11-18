@@ -5,14 +5,18 @@ namespace EerieLeap.Utilities;
 public static class IdGenerator
 {
     private static readonly Regex InvalidCharsRegex = new("[^a-z0-9_]", RegexOptions.Compiled);
+    private static readonly Regex MultipleSpacesRegex = new(@"\s+", RegexOptions.Compiled);
     
     public static string GenerateId(string? name = null)
     {
-        if (string.IsNullOrEmpty(name))
+        if (string.IsNullOrWhiteSpace(name))
             return Guid.NewGuid().ToString("N")[..6];
             
-        // Convert to lowercase
-        var id = name.ToLowerInvariant();
+        // Convert to lowercase and trim
+        var id = name.Trim().ToLowerInvariant();
+        
+        // Replace multiple spaces with single space
+        id = MultipleSpacesRegex.Replace(id, " ");
         
         // Replace spaces with underscores
         id = id.Replace(' ', '_');
@@ -21,6 +25,9 @@ public static class IdGenerator
         id = InvalidCharsRegex.Replace(id, "");
 
         // If after cleaning the ID is empty, generate a GUID-based one
-        return string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString("N")[..6] : id;
+        if (string.IsNullOrEmpty(id))
+            return Guid.NewGuid().ToString("N")[..6];
+            
+        return id;
     }
 }
