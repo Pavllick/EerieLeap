@@ -1,15 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Globalization;
 
 namespace EerieLeap.Utilities;
 
-public sealed class HexByteArrayConverter : JsonConverter<byte[]?>
-{
+public sealed class HexByteArrayConverter : JsonConverter<byte[]?> {
     public override bool HandleNull => true;
 
-    public override byte[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
+    public override byte[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType == JsonTokenType.Null)
             return Array.Empty<byte>();
 
@@ -20,7 +17,7 @@ public sealed class HexByteArrayConverter : JsonConverter<byte[]?>
         if (hex == null)
             return Array.Empty<byte>();
 
-        hex = hex.StartsWith("0x", StringComparison.OrdinalIgnoreCase) 
+        hex = hex.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
             ? hex[2..]
             : hex;
 
@@ -31,32 +28,26 @@ public sealed class HexByteArrayConverter : JsonConverter<byte[]?>
         if (hex.Length % 2 == 1)
             hex = "0" + hex;
 
-        try
-        {
+        try {
             return Convert.FromHexString(hex);
-        }
-        catch (FormatException)
-        {
+        } catch (FormatException) {
             throw new JsonException($"Invalid hex string: {hex}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options)
-    {
+    public override void Write(Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options) {
         ArgumentNullException.ThrowIfNull(writer);
-        
-        if (value == null)
-        {
+
+        if (value == null) {
             writer.WriteNullValue();
             return;
         }
-        
-        if (value.Length == 0)
-        {
+
+        if (value.Length == 0) {
             writer.WriteStringValue("0x");
             return;
         }
-        
-        writer.WriteStringValue("0x" + Convert.ToHexString(value).ToLower(CultureInfo.InvariantCulture));
+
+        writer.WriteStringValue("0x" + Convert.ToHexString(value).ToUpperInvariant());
     }
 }

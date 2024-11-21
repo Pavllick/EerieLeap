@@ -98,22 +98,19 @@ public partial class ConfigController : ControllerBase {
         ArgumentNullException.ThrowIfNull(configs);
 
         try {
-            // Validate sensor IDs
-            foreach (var config in configs)
+            var configsList = configs.ToList();
+
+            var seenIds = new HashSet<string>();
+            foreach (var config in configsList) {
                 if (!SensorIdValidator.IsValid(config.Id))
                     return BadRequest($"Invalid sensor Id format: '{config.Id}'");
 
-            // Check for duplicate IDs
-            var duplicateIds = configs
-                .GroupBy(c => c.Id)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
-                .ToList();
+                if (!seenIds.Add(config.Id))
+                    return BadRequest($"Duplicate sensor ID found: '{config.Id}'");
+            }
 
-            if (duplicateIds.Any())
-                return BadRequest($"Duplicate sensor IDs found: {string.Join(", ", duplicateIds)}");
+            await _sensorService.UpdateSensorConfigurationsAsync(configsList).ConfigureAwait(false);
 
-            await _sensorService.UpdateSensorConfigurationsAsync(configs).ConfigureAwait(false);
             return Ok();
         } catch (Exception ex) {
             LogSensorConfigsUpdateError(ex);

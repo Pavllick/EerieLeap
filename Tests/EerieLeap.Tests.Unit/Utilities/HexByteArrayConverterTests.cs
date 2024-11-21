@@ -35,7 +35,7 @@ public class HexByteArrayConverterTests {
     [Theory]
     [InlineData(new byte[] { 0x01, 0x02 }, "0x0102")]
     [InlineData(new byte[0], "0x")]
-    [InlineData(new byte[] { 0x0f }, "0x0f")]
+    [InlineData(new byte[] { 0x0f }, "0x0F")]
     public void Serialize_ByteArray_ReturnsExpectedHexString(byte[] input, string expected) {
         var testObject = new TestClass { Data = input };
         var json = JsonSerializer.Serialize(testObject, _options);
