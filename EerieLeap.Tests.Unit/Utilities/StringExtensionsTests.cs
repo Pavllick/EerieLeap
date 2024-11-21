@@ -3,8 +3,7 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.Utilities;
 
-public class StringExtensionsTests
-{
+public class StringExtensionsTests {
     [Theory]
     [InlineData("camelCase", "camel case")]
     [InlineData("PascalCase", "pascal case")]
@@ -16,8 +15,7 @@ public class StringExtensionsTests
     [InlineData("iPhone", "i phone")]
     [InlineData("CDC", "c d c")]
     [InlineData("SensorType", "sensor type")]
-    public void SpaceCamelCase_WithVariousInputs_ReturnsExpectedResult(string input, string expected)
-    {
+    public void SpaceCamelCase_WithVariousInputs_ReturnsExpectedResult(string input, string expected) {
         var result = input.SpaceCamelCase();
         Assert.Equal(expected, result);
     }

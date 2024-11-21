@@ -7,24 +7,20 @@ namespace EerieLeap.Hardware;
 /// <summary>
 /// Base class for SPI-based ADC implementations
 /// </summary>
-public abstract class SpiAdc : IAdc, IDisposable
-{
+public abstract class SpiAdc : IAdc, IDisposable {
     private readonly ILogger _logger;
     private SpiDevice? _spiDevice;
     private AdcConfig? _config;
     private bool _isDisposed;
 
-    protected SpiAdc(ILogger logger)
-    {
+    protected SpiAdc(ILogger logger) {
         _logger = logger;
     }
 
-    public void Configure(AdcConfig config)
-    {
+    public void Configure(AdcConfig config) {
         ArgumentNullException.ThrowIfNull(config);
 
-        var settings = new SpiConnectionSettings(config.BusId, config.ChipSelect)
-        {
+        var settings = new SpiConnectionSettings(config.BusId, config.ChipSelect) {
             ClockFrequency = config.ClockFrequency,
             Mode = config.Mode,
             DataBitLength = config.DataBitLength
@@ -55,17 +51,14 @@ public abstract class SpiAdc : IAdc, IDisposable
 
     public abstract Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default);
 
-    protected (byte[] readBuffer, int rawValue) TransferSpi(int channel)
-    {
+    protected (byte[] readBuffer, int rawValue) TransferSpi(int channel) {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
-        
+
         if (_spiDevice == null || _config == null)
-        {
             throw new InvalidOperationException("ADC not configured. Call Configure first.");
-        }
 
         // Prepare command bytes using the protocol configuration
-        byte commandByte = (byte)(_config.Protocol.CommandPrefix.FirstOrDefault() | 
+        byte commandByte = (byte)(_config.Protocol.CommandPrefix.FirstOrDefault() |
             ((channel & _config.Protocol.ChannelMask) << _config.Protocol.ChannelBitShift));
 
         byte[] writeBuffer = new[] { commandByte };
@@ -76,26 +69,20 @@ public abstract class SpiAdc : IAdc, IDisposable
         // Extract reading using configured bit masks and shifts
         int rawValue = 0;
         for (int i = 0; i < readBuffer.Length; i++)
-        {
             rawValue = (rawValue << 8) | readBuffer[i];
-        }
 
         rawValue = (rawValue >> _config.Protocol.ResultBitShift) & _config.Protocol.ResultBitMask;
         return (readBuffer, rawValue);
     }
 
-    protected double ConvertToVoltage(int rawValue)
-    {
+    protected double ConvertToVoltage(int rawValue) {
         if (_config == null)
-        {
             throw new InvalidOperationException("ADC not configured. Call Configure first.");
-        }
 
         return (rawValue * _config.ReferenceVoltage) / ((1 << _config.Resolution) - 1);
     }
 
-    protected void LogReading(int channel, int rawValue, double voltage)
-    {
+    protected void LogReading(int channel, int rawValue, double voltage) {
         _logger.LogTrace(
             "Channel {Channel}: Raw={Raw}, Voltage={Voltage:F3}V",
             channel,
@@ -104,10 +91,10 @@ public abstract class SpiAdc : IAdc, IDisposable
         );
     }
 
-    public void Dispose()
-    {
-        if (_isDisposed) return;
-        
+    public void Dispose() {
+        if (_isDisposed)
+            return;
+
         _spiDevice?.Dispose();
         _spiDevice = null;
         _config = null;

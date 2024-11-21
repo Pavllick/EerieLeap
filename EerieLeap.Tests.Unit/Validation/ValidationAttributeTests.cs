@@ -6,11 +6,9 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.Validation;
 
-public class ValidationAttributeTests
-{
+public class ValidationAttributeTests {
     [Fact]
-    public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertyNull_ValidationFails()
-    {
+    public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertyNull_ValidationFails() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Temperature };
         var validationContext = new ValidationContext(model);
@@ -25,8 +23,7 @@ public class ValidationAttributeTests
     }
 
     [Fact]
-    public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertySet_ValidationPasses()
-    {
+    public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertySet_ValidationPasses() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Temperature, Channel = 1 };
         var validationContext = new ValidationContext(model);
@@ -40,8 +37,7 @@ public class ValidationAttributeTests
     }
 
     [Fact]
-    public void RequiredForPhysicalSensor_WhenVirtualSensor_ValidationPasses()
-    {
+    public void RequiredForPhysicalSensor_WhenVirtualSensor_ValidationPasses() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Virtual };
         var validationContext = new ValidationContext(model);
@@ -55,8 +51,7 @@ public class ValidationAttributeTests
     }
 
     [Fact]
-    public void RequiredForVirtualSensor_WhenVirtualSensorAndPropertyNull_ValidationFails()
-    {
+    public void RequiredForVirtualSensor_WhenVirtualSensorAndPropertyNull_ValidationFails() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Virtual };
         var validationContext = new ValidationContext(model);
@@ -71,8 +66,7 @@ public class ValidationAttributeTests
     }
 
     [Fact]
-    public void RequiredForVirtualSensor_WhenVirtualSensorAndPropertySet_ValidationPasses()
-    {
+    public void RequiredForVirtualSensor_WhenVirtualSensorAndPropertySet_ValidationPasses() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Virtual, ConversionExpression = "2 * x" };
         var validationContext = new ValidationContext(model);
@@ -86,8 +80,7 @@ public class ValidationAttributeTests
     }
 
     [Fact]
-    public void RequiredForVirtualSensor_WhenPhysicalSensor_ValidationPasses()
-    {
+    public void RequiredForVirtualSensor_WhenPhysicalSensor_ValidationPasses() {
         // Arrange
         var model = new SensorConfig { Type = SensorType.Temperature };
         var validationContext = new ValidationContext(model);

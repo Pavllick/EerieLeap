@@ -5,11 +5,9 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.Configuration;
 
-public class SensorConfigTests
-{
+public class SensorConfigTests {
     [Fact]
-    public void SensorConfig_WhenCreated_ShouldHaveDefaultValues()
-    {
+    public void SensorConfig_WhenCreated_ShouldHaveDefaultValues() {
         // Act
         var config = new SensorConfig();
 
@@ -21,8 +19,7 @@ public class SensorConfigTests
     }
 
     [Fact]
-    public void SensorConfig_WhenNameSet_ShouldGenerateId()
-    {
+    public void SensorConfig_WhenNameSet_ShouldGenerateId() {
         // Arrange
         var config = new SensorConfig { Id = string.Empty };
         config.Name = "Test Sensor";
@@ -39,11 +36,9 @@ public class SensorConfigTests
     [Theory]
     [InlineData("test@sensor")]
     [InlineData("test#123")]
-    public void Validate_WithInvalidId_ShouldFailValidation(string invalidId)
-    {
+    public void Validate_WithInvalidId_ShouldFailValidation(string invalidId) {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = invalidId,
             Name = "Test",
             Type = SensorType.Temperature,
@@ -62,16 +57,14 @@ public class SensorConfigTests
 
         // Assert
         Assert.False(isValid);
-        Assert.Contains(validationResults, r => r.MemberNames.Contains("Id") && 
+        Assert.Contains(validationResults, r => r.MemberNames.Contains("Id") &&
             r.ErrorMessage != null && r.ErrorMessage.Contains("can only contain letters, numbers, and underscores"));
     }
 
     [Fact]
-    public void Validate_PhysicalSensorWithoutRequiredProperties_ShouldFailValidation()
-    {
+    public void Validate_PhysicalSensorWithoutRequiredProperties_ShouldFailValidation() {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "test_sensor",
             Name = "Test Sensor",
             Type = SensorType.Temperature,
@@ -94,11 +87,9 @@ public class SensorConfigTests
     }
 
     [Fact]
-    public void Validate_VirtualSensorWithoutPhysicalProperties_ShouldPassValidation()
-    {
+    public void Validate_VirtualSensorWithoutPhysicalProperties_ShouldPassValidation() {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "virtual_sensor_1",
             Name = "Virtual Sensor 1",
             Type = SensorType.Virtual,
@@ -117,11 +108,9 @@ public class SensorConfigTests
     }
 
     [Fact]
-    public void Validate_VirtualSensorWithoutExpression_ShouldFailValidation()
-    {
+    public void Validate_VirtualSensorWithoutExpression_ShouldFailValidation() {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "virtual_sensor_1",
             Name = "Virtual Sensor 1",
             Type = SensorType.Virtual,
@@ -135,21 +124,19 @@ public class SensorConfigTests
 
         // Assert
         Assert.False(isValid);
-        
+
         var errors = validationResults.SelectMany(r => r.MemberNames.Select(m => (m, r.ErrorMessage))).ToList();
 
-        Assert.Contains(errors, e => e.Item1 == "ConversionExpression" && 
+        Assert.Contains(errors, e => e.Item1 == "ConversionExpression" &&
             e.Item2 == "Virtual sensors must have a conversion expression to combine other sensor values");
     }
 
     [Theory]
     [InlineData(-1)]
     [InlineData(32)]
-    public void Validate_PhysicalSensorWithInvalidChannel_ShouldFailValidation(int invalidChannel)
-    {
+    public void Validate_PhysicalSensorWithInvalidChannel_ShouldFailValidation(int invalidChannel) {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "temp_sensor_1",
             Name = "Temperature Sensor 1",
             Type = SensorType.Temperature,

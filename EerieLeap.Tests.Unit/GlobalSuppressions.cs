@@ -6,5 +6,5 @@
 using System.Diagnostics.CodeAnalysis;
 
 // Suppress xUnit1012 warnings about null string parameters in test methods
-[assembly: SuppressMessage("xUnit", "xUnit1012:Null should not be used for type parameter", 
+[assembly: SuppressMessage("xUnit", "xUnit1012:Null should not be used for type parameter",
     Justification = "Testing null string scenarios is a valid test case in our unit tests")]

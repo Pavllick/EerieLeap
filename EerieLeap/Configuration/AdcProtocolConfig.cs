@@ -4,8 +4,7 @@ using EerieLeap.Utilities;
 
 namespace EerieLeap.Configuration;
 
-public class AdcProtocolConfig
-{
+public class AdcProtocolConfig {
     [Required]
     [JsonConverter(typeof(HexByteArrayConverter))]
     public byte[] CommandPrefix { get; set; } = new byte[] { 0x01 };

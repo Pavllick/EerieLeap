@@ -7,15 +7,12 @@ using Xunit;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
-public class ReadingsControllerTests : FunctionalTestBase
-{
-    public ReadingsControllerTests(WebApplicationFactory<Program> factory) 
-        : base(factory)
-    { }
+public class ReadingsControllerTests : FunctionalTestBase {
+    public ReadingsControllerTests(WebApplicationFactory<Program> factory)
+        : base(factory) { }
 
     [Fact]
-    public async Task GetReadings_ReturnsSuccessStatusCode()
-    {
+    public async Task GetReadings_ReturnsSuccessStatusCode() {
         // Act
         var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
 
@@ -24,11 +21,9 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings()
-    {
+    public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings() {
         // Arrange
-        var config1 = new SensorConfig
-        {
+        var config1 = new SensorConfig {
             Id = "physical_sensor_1",
             Name = "Physical Temperature Sensor 1",
             Type = SensorType.Temperature,
@@ -41,8 +36,7 @@ public class ReadingsControllerTests : FunctionalTestBase
             SamplingRateMs = 1000
         };
 
-        var config2 = new SensorConfig
-        {
+        var config2 = new SensorConfig {
             Id = "physical_sensor_2",
             Name = "Physical Temperature Sensor 2",
             Type = SensorType.Temperature,
@@ -80,11 +74,9 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReadings_WithVirtualSensor_ReturnsValidReadings()
-    {
+    public async Task GetReadings_WithVirtualSensor_ReturnsValidReadings() {
         // Arrange
-        var physicalConfig = new SensorConfig
-        {
+        var physicalConfig = new SensorConfig {
             Id = "physical_temp_1",
             Name = "Physical Temperature 1",
             Type = SensorType.Temperature,
@@ -97,8 +89,7 @@ public class ReadingsControllerTests : FunctionalTestBase
             SamplingRateMs = 1000
         };
 
-        var virtualConfig = new SensorConfig
-        {
+        var virtualConfig = new SensorConfig {
             Id = "virtual_avg_temp",
             Name = "Virtual Average Temperature",
             Type = SensorType.Virtual,
@@ -132,8 +123,7 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReadings_WithConfiguredSensors_ReturnsReadingsForAllSensors()
-    {
+    public async Task GetReadings_WithConfiguredSensors_ReturnsReadingsForAllSensors() {
         // Arrange
         var configs = new List<SensorConfig>
         {
@@ -177,21 +167,19 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReading_WithInvalidId_ReturnsNotFound()
-    {
+    public async Task GetReading_WithInvalidId_ReturnsNotFound() {
         // Arrange
         var sensorId = "nonexistent_sensor";
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             await GetAsync<ReadingResult>($"api/v1/readings/{sensorId}"));
-        
+
         Assert.Contains("404", exception.Message);
     }
 
     [Fact]
-    public async Task GetReading_WithInvalidIdFormat_ReturnsBadRequest()
-    {
+    public async Task GetReading_WithInvalidIdFormat_ReturnsBadRequest() {
         // Act
         var response = await GetWithFullResponse("api/v1/readings/invalid!id");
 
@@ -200,11 +188,9 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReading_WithConfiguredSensor_ReturnsValidReading()
-    {
+    public async Task GetReading_WithConfiguredSensor_ReturnsValidReading() {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "test_sensor_1",
             Name = "Test Sensor 1",
             Type = SensorType.Temperature,
@@ -230,8 +216,7 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReading_WithInvalidId_ReturnsBadRequest()
-    {
+    public async Task GetReading_WithInvalidId_ReturnsBadRequest() {
         // Act
         var response = await Client.GetAsync("api/v1/readings/invalid-id");
 
@@ -240,11 +225,9 @@ public class ReadingsControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetReading_AfterSensorRemoved_ReturnsNotFound()
-    {
+    public async Task GetReading_AfterSensorRemoved_ReturnsNotFound() {
         // Arrange
-        var sensorConfig = new SensorConfig
-        {
+        var sensorConfig = new SensorConfig {
             Id = "temp_sensor",
             Name = "Temperature Sensor",
             Type = SensorType.Temperature,
@@ -263,7 +246,7 @@ public class ReadingsControllerTests : FunctionalTestBase
 
         // Act
         var response = await GetWithFullResponse($"api/v1/readings/{sensorConfig.Id}");
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

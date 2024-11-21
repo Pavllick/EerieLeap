@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 namespace EerieLeap.Types;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum SensorType
-{
+public enum SensorType {
     Temperature,
     Pressure,
     Flow,

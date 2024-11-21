@@ -1,6 +1,5 @@
 namespace EerieLeap.Hardware;
 
-public interface IAdcFactory
-{
+public interface IAdcFactory {
     IAdc CreateAdc();
 }

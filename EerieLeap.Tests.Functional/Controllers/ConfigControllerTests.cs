@@ -8,15 +8,12 @@ using Xunit;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
-public class ConfigControllerTests : FunctionalTestBase
-{
-    public ConfigControllerTests(WebApplicationFactory<Program> factory) 
-        : base(factory)
-    { }
+public class ConfigControllerTests : FunctionalTestBase {
+    public ConfigControllerTests(WebApplicationFactory<Program> factory)
+        : base(factory) { }
 
     [Fact]
-    public async Task GetConfig_ReturnsSuccessStatusCode()
-    {
+    public async Task GetConfig_ReturnsSuccessStatusCode() {
         // Act
         var config = await GetAsync<CombinedConfig>("api/v1/config");
 
@@ -27,8 +24,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetAdcConfig_ReturnsSuccessStatusCode()
-    {
+    public async Task GetAdcConfig_ReturnsSuccessStatusCode() {
         // Act
         var config = await GetAsync<AdcConfig>("api/v1/config/adc");
 
@@ -37,8 +33,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetSensorConfigs_ReturnsSuccessStatusCode()
-    {
+    public async Task GetSensorConfigs_ReturnsSuccessStatusCode() {
         // Act
         var configs = await GetAsync<List<SensorConfig>>("api/v1/config/sensors");
 
@@ -47,11 +42,9 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task UpdateAdcConfig_WithValidAdcConfig_ReturnsSuccessStatusCode()
-    {
+    public async Task UpdateAdcConfig_WithValidAdcConfig_ReturnsSuccessStatusCode() {
         // Arrange
-        var config = new AdcConfig
-        {
+        var config = new AdcConfig {
             Type = "MCP3008",
             Resolution = 10,
             ReferenceVoltage = 3.3,
@@ -83,8 +76,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task UpdateAdcConfig_WithInvalidAdcConfig_ReturnsBadRequest()
-    {
+    public async Task UpdateAdcConfig_WithInvalidAdcConfig_ReturnsBadRequest() {
         // Arrange
         var config = new AdcConfig(); // Missing required fields
 
@@ -93,13 +85,12 @@ public class ConfigControllerTests : FunctionalTestBase
             var response = await PostAsync("api/v1/config/adc", config);
             response.EnsureSuccessStatusCode();
         });
-        
+
         Assert.Contains("400", exception.Message);
     }
 
     [Fact]
-    public async Task UpdateSensorConfigs_WithValidConfigs_ReturnsSuccessStatusCode()
-    {
+    public async Task UpdateSensorConfigs_WithValidConfigs_ReturnsSuccessStatusCode() {
         // Arrange
         var configs = new List<SensorConfig>
         {
@@ -142,11 +133,9 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task UpdateSensorConfigs_WithValidPhysicalSensor_ValidatesAllProperties()
-    {
+    public async Task UpdateSensorConfigs_WithValidPhysicalSensor_ValidatesAllProperties() {
         // Arrange
-        var config1 = new SensorConfig
-        {
+        var config1 = new SensorConfig {
             Id = "physical_sensor_1",
             Name = "Physical Temperature Sensor",
             Type = SensorType.Temperature,
@@ -159,8 +148,7 @@ public class ConfigControllerTests : FunctionalTestBase
             SamplingRateMs = 1000
         };
 
-        var config2 = new SensorConfig
-        {
+        var config2 = new SensorConfig {
             Id = "physical_sensor_2",
             Name = "Physical Temperature Sensor",
             Type = SensorType.Temperature,
@@ -206,11 +194,9 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task UpdateSensorConfigs_WithValidVirtualSensor_ValidatesAllProperties()
-    {
+    public async Task UpdateSensorConfigs_WithValidVirtualSensor_ValidatesAllProperties() {
         // Arrange
-        var physicalConfig = new SensorConfig
-        {
+        var physicalConfig = new SensorConfig {
             Id = "physical_temp_1",
             Name = "Physical Temperature 1",
             Type = SensorType.Temperature,
@@ -223,8 +209,7 @@ public class ConfigControllerTests : FunctionalTestBase
             SamplingRateMs = 1000
         };
 
-        var virtualConfig = new SensorConfig
-        {
+        var virtualConfig = new SensorConfig {
             Id = "virtual_avg_temp",
             Name = "Virtual Average Temperature",
             Type = SensorType.Virtual,
@@ -249,7 +234,7 @@ public class ConfigControllerTests : FunctionalTestBase
         Assert.Equal(virtualConfig.MaxValue, storedConfig.MaxValue);
         Assert.Equal(virtualConfig.SamplingRateMs, storedConfig.SamplingRateMs);
         Assert.Equal(virtualConfig.ConversionExpression, storedConfig.ConversionExpression);
-        
+
         // Virtual sensors should not have physical sensor properties
         Assert.Null(storedConfig.Channel);
         Assert.Null(storedConfig.MinVoltage);
@@ -257,8 +242,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task UpdateSensorConfigs_WithInvalidConfig_ReturnsBadRequest()
-    {
+    public async Task UpdateSensorConfigs_WithInvalidConfig_ReturnsBadRequest() {
         // Arrange
         var configs = new List<SensorConfig>
         {
@@ -275,13 +259,12 @@ public class ConfigControllerTests : FunctionalTestBase
             var response = await PostAsync("api/v1/config/sensors", configs);
             response.EnsureSuccessStatusCode();
         });
-        
+
         Assert.Contains("400", exception.Message);
     }
 
     [Fact]
-    public async Task UpdateSensorConfigs_WithDuplicateIds_ReturnsBadRequest()
-    {
+    public async Task UpdateSensorConfigs_WithDuplicateIds_ReturnsBadRequest() {
         // Arrange
         var configs = new List<SensorConfig>
         {
@@ -321,11 +304,9 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetSensorConfig_WithValidId_ReturnsConfig()
-    {
+    public async Task GetSensorConfig_WithValidId_ReturnsConfig() {
         // Arrange
-        var config = new SensorConfig
-        {
+        var config = new SensorConfig {
             Id = "test_sensor_1",
             Name = "Test Sensor 1",
             Type = SensorType.Temperature,
@@ -352,8 +333,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetSensorConfig_WithInvalidId_ReturnsBadRequest()
-    {
+    public async Task GetSensorConfig_WithInvalidId_ReturnsBadRequest() {
         // Act
         var response = await Client.GetAsync("api/v1/config/sensors/invalid-id");
 
@@ -362,8 +342,7 @@ public class ConfigControllerTests : FunctionalTestBase
     }
 
     [Fact]
-    public async Task GetSensorConfig_WithInvalidIdFormat_ReturnsBadRequest()
-    {
+    public async Task GetSensorConfig_WithInvalidIdFormat_ReturnsBadRequest() {
         // Act
         var response = await GetWithFullResponse("api/v1/config/sensors/invalid!id");
 

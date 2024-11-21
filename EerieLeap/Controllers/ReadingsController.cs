@@ -7,37 +7,29 @@ namespace EerieLeap.Controllers;
 
 [ApiController]
 [Route("api/v1/readings")]
-public class ReadingsController : ControllerBase
-{
+public class ReadingsController : ControllerBase {
     private readonly ILogger<ReadingsController> _logger;
     private readonly ISensorReadingService _sensorService;
 
-    public ReadingsController(ISensorReadingService sensorService, ILogger<ReadingsController> logger)
-    {
+    public ReadingsController(ISensorReadingService sensorService, ILogger<ReadingsController> logger) {
         _sensorService = sensorService;
         _logger = logger;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ReadingResult>>> GetReadings()
-    {
-        try
-        {
+    public async Task<ActionResult<IEnumerable<ReadingResult>>> GetReadings() {
+        try {
             var readings = await _sensorService.GetReadingsAsync();
             return Ok(readings);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             _logger.LogError(ex, "Failed to get sensor readings");
             return StatusCode(500, "Failed to get sensor readings");
         }
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ReadingResult>> GetReading(string id)
-    {
-        try
-        {
+    public async Task<ActionResult<ReadingResult>> GetReading(string id) {
+        try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
 
@@ -46,9 +38,7 @@ public class ReadingsController : ControllerBase
                 return NotFound($"Reading for sensor Id '{id}' not found");
 
             return Ok(reading);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             _logger.LogError(ex, "Failed to get sensor reading for {Id}", id);
             return StatusCode(500, $"Failed to get sensor reading for {id}");
         }

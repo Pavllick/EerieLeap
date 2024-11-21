@@ -3,8 +3,7 @@ using System.Device.Spi;
 
 namespace EerieLeap.Configuration;
 
-public class AdcConfig
-{
+public class AdcConfig {
     [Required]
     public string Type { get; set; } = string.Empty;
 

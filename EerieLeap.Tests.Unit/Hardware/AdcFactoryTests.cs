@@ -5,11 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace EerieLeap.Tests.Unit.Hardware;
 
-public class AdcFactoryTests
-{
+public class AdcFactoryTests {
     [Fact]
-    public void CreateAdc_WhenCalled_ShouldReturnAdcInstance()
-    {
+    public void CreateAdc_WhenCalled_ShouldReturnAdcInstance() {
         // Arrange
         var mockFactoryLogger = new Mock<ILogger<AdcFactory>>();
         var mockAdcLogger = new Mock<ILogger<Adc>>();

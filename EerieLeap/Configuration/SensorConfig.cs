@@ -5,8 +5,7 @@ using EerieLeap.Utilities.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
-public class SensorConfig
-{
+public class SensorConfig {
     private string _name = string.Empty;
 
     [Required]
@@ -14,11 +13,9 @@ public class SensorConfig
     public string Id { get; set; } = IdGenerator.GenerateId();
 
     [Required]
-    public string Name
-    {
+    public string Name {
         get => _name;
-        set
-        {
+        set {
             _name = value;
             if (string.IsNullOrWhiteSpace(Id))
                 Id = IdGenerator.GenerateId(value);

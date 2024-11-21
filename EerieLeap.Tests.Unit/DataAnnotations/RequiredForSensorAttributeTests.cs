@@ -6,10 +6,8 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.DataAnnotations;
 
-public class RequiredForSensorAttributeTests
-{
-    private class TestModel
-    {
+public class RequiredForSensorAttributeTests {
+    private class TestModel {
         [RequiredForPhysicalSensor]
         public double? PhysicalValue { get; set; }
 
@@ -22,13 +20,11 @@ public class RequiredForSensorAttributeTests
     [InlineData(SensorType.Physical, 42.0, true, "PhysicalValue")]
     [InlineData(SensorType.Virtual, null, true, "PhysicalValue")]
     [InlineData(SensorType.Virtual, 42.0, true, "PhysicalValue")]
-    public void RequiredForPhysicalSensor_ValidatesCorrectly(SensorType sensorType, double? value, bool expectedValid, string propertyName)
-    {
+    public void RequiredForPhysicalSensor_ValidatesCorrectly(SensorType sensorType, double? value, bool expectedValid, string propertyName) {
         // Arrange
         var model = new TestModel { PhysicalValue = value };
         var sensorConfig = new SensorConfig { Type = sensorType };
-        var context = new ValidationContext(sensorConfig) 
-        { 
+        var context = new ValidationContext(sensorConfig) {
             MemberName = propertyName,
             DisplayName = propertyName
         };
@@ -39,8 +35,7 @@ public class RequiredForSensorAttributeTests
 
         // Assert
         Assert.Equal(expectedValid, result == ValidationResult.Success);
-        if (!expectedValid)
-        {
+        if (!expectedValid) {
             Assert.Contains("required for physical sensors", result!.ErrorMessage);
             Assert.Equal(propertyName, result.MemberNames.First());
         }
@@ -52,13 +47,11 @@ public class RequiredForSensorAttributeTests
     [InlineData(SensorType.Virtual, "expression", true, "VirtualValue")]
     [InlineData(SensorType.Physical, null, true, "VirtualValue")]
     [InlineData(SensorType.Physical, "", true, "VirtualValue")]
-    public void RequiredForVirtualSensor_ValidatesCorrectly(SensorType sensorType, string? value, bool expectedValid, string propertyName)
-    {
+    public void RequiredForVirtualSensor_ValidatesCorrectly(SensorType sensorType, string? value, bool expectedValid, string propertyName) {
         // Arrange
         var model = new TestModel { VirtualValue = value };
         var sensorConfig = new SensorConfig { Type = sensorType };
-        var context = new ValidationContext(sensorConfig)
-        {
+        var context = new ValidationContext(sensorConfig) {
             MemberName = propertyName,
             DisplayName = propertyName
         };
@@ -69,20 +62,17 @@ public class RequiredForSensorAttributeTests
 
         // Assert
         Assert.Equal(expectedValid, result == ValidationResult.Success);
-        if (!expectedValid)
-        {
+        if (!expectedValid) {
             Assert.Contains("required for virtual sensors", result!.ErrorMessage);
             Assert.Equal(propertyName, result.MemberNames.First());
         }
     }
 
     [Fact]
-    public void RequiredForPhysicalSensor_OnNonSensorConfig_ThrowsValidationError()
-    {
+    public void RequiredForPhysicalSensor_OnNonSensorConfig_ThrowsValidationError() {
         // Arrange
         var model = new TestModel();
-        var context = new ValidationContext(model)
-        {
+        var context = new ValidationContext(model) {
             MemberName = "PhysicalValue",
             DisplayName = "PhysicalValue"
         };
@@ -97,12 +87,10 @@ public class RequiredForSensorAttributeTests
     }
 
     [Fact]
-    public void RequiredForVirtualSensor_OnNonSensorConfig_ThrowsValidationError()
-    {
+    public void RequiredForVirtualSensor_OnNonSensorConfig_ThrowsValidationError() {
         // Arrange
         var model = new TestModel();
-        var context = new ValidationContext(model)
-        {
+        var context = new ValidationContext(model) {
             MemberName = "VirtualValue",
             DisplayName = "VirtualValue"
         };
@@ -117,14 +105,12 @@ public class RequiredForSensorAttributeTests
     }
 
     [Fact]
-    public void RequiredForPhysicalSensor_WithCustomErrorMessage_UsesCustomMessage()
-    {
+    public void RequiredForPhysicalSensor_WithCustomErrorMessage_UsesCustomMessage() {
         // Arrange
         var customMessage = "Custom error message for physical sensor.";
         var model = new TestModel { PhysicalValue = null };
         var sensorConfig = new SensorConfig { Type = SensorType.Physical };
-        var context = new ValidationContext(sensorConfig)
-        {
+        var context = new ValidationContext(sensorConfig) {
             MemberName = "PhysicalValue",
             DisplayName = "PhysicalValue"
         };
@@ -138,14 +124,12 @@ public class RequiredForSensorAttributeTests
     }
 
     [Fact]
-    public void RequiredForVirtualSensor_WithCustomErrorMessage_UsesCustomMessage()
-    {
+    public void RequiredForVirtualSensor_WithCustomErrorMessage_UsesCustomMessage() {
         // Arrange
         var customMessage = "Custom error message for virtual sensor.";
         var model = new TestModel { VirtualValue = null };
         var sensorConfig = new SensorConfig { Type = SensorType.Virtual };
-        var context = new ValidationContext(sensorConfig)
-        {
+        var context = new ValidationContext(sensorConfig) {
             MemberName = "VirtualValue",
             DisplayName = "VirtualValue"
         };

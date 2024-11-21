@@ -11,8 +11,7 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.Services;
 
-public class SensorReadingServiceTests : IDisposable
-{
+public class SensorReadingServiceTests : IDisposable {
     private readonly string _testConfigPath;
     private readonly Mock<ILogger<SensorReadingService>> _mockLogger;
     private readonly Mock<ILogger<AdcFactory>> _mockAdcFactoryLogger;
@@ -21,12 +20,10 @@ public class SensorReadingServiceTests : IDisposable
     private readonly SensorReadingService _service;
     private readonly string _testDir;
 
-    public SensorReadingServiceTests()
-    {
+    public SensorReadingServiceTests() {
         var tempDir = Path.GetTempPath();
         _testDir = Path.Combine(tempDir, "EerieLeapTests");
-        if (Directory.Exists(_testDir))
-        {
+        if (Directory.Exists(_testDir)) {
             Directory.Delete(_testDir, true);
         }
         Directory.CreateDirectory(_testDir);
@@ -45,20 +42,16 @@ public class SensorReadingServiceTests : IDisposable
         _service = new SensorReadingService(_mockLogger.Object, adcFactory, _mockConfiguration.Object);
     }
 
-    public void Dispose()
-    {
-        if (Directory.Exists(_testDir))
-        {
+    public void Dispose() {
+        if (Directory.Exists(_testDir)) {
             Directory.Delete(_testDir, true);
         }
     }
 
     [Fact]
-    public async Task StartAsync_WithValidConfig_InitializesCorrectly()
-    {
+    public async Task StartAsync_WithValidConfig_InitializesCorrectly() {
         // Arrange
-        var sensorConfig = new SensorConfig
-        {
+        var sensorConfig = new SensorConfig {
             Id = "temp_sensor_1",
             Name = "Temperature Sensor 1",
             Type = SensorType.Temperature,
@@ -70,8 +63,7 @@ public class SensorReadingServiceTests : IDisposable
             Unit = "C"
         };
 
-        var adcConfig = new AdcConfig
-        {
+        var adcConfig = new AdcConfig {
             Type = "MCP3008",
             BusId = 0,
             ChipSelect = 0,
@@ -80,8 +72,7 @@ public class SensorReadingServiceTests : IDisposable
             DataBitLength = 8
         };
 
-        var combinedConfig = new CombinedConfig
-        {
+        var combinedConfig = new CombinedConfig {
             SensorConfigs = new List<SensorConfig> { sensorConfig },
             AdcConfig = adcConfig
         };
@@ -108,8 +99,7 @@ public class SensorReadingServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task StartAsync_WithInvalidConfig_ThrowsException()
-    {
+    public async Task StartAsync_WithInvalidConfig_ThrowsException() {
         // Arrange
         var invalidJson = "{ invalid json";
         var adcJsonPath = Path.Combine(_testConfigPath, "adc.json");

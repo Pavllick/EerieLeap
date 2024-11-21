@@ -4,17 +4,13 @@ using Xunit;
 
 namespace EerieLeap.Tests.Unit.DataAnnotations;
 
-public class BooleanOperationAttributeTests
-{
-    private class TestBooleanOperationAttribute : BooleanOperationAttribute
-    {
+public class BooleanOperationAttributeTests {
+    private class TestBooleanOperationAttribute : BooleanOperationAttribute {
         public TestBooleanOperationAttribute(BooleanOperation operation, object operandValue)
-            : base(operation, operandValue)
-        { }
+            : base(operation, operandValue) { }
     }
 
-    private class TestModel
-    {
+    private class TestModel {
         [GreaterThan(10)]
         public int Value { get; set; }
     }
@@ -32,46 +28,40 @@ public class BooleanOperationAttributeTests
         BooleanOperation operation,
         int operandValue,
         int testValue,
-        bool expectedResult)
-    {
+        bool expectedResult) {
         var attribute = new TestBooleanOperationAttribute(operation, operandValue);
         var result = attribute.IsValid(testValue);
         Assert.Equal(expectedResult, result);
     }
 
     [Fact]
-    public void IsValid_WithNullValue_ReturnsTrue()
-    {
+    public void IsValid_WithNullValue_ReturnsTrue() {
         var attribute = new TestBooleanOperationAttribute(BooleanOperation.GreaterThan, 10);
         var result = attribute.IsValid(null);
         Assert.True(result);
     }
 
     [Fact]
-    public void Constructor_WithNullOperandValue_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => 
+    public void Constructor_WithNullOperandValue_ThrowsArgumentNullException() {
+        Assert.Throws<ArgumentNullException>(() =>
             new TestBooleanOperationAttribute(BooleanOperation.GreaterThan, null!));
     }
 
     [Fact]
-    public void Constructor_WithNullOperation_ThrowsArgumentException()
-    {
-        Assert.Throws<ArgumentException>(() => 
+    public void Constructor_WithNullOperation_ThrowsArgumentException() {
+        Assert.Throws<ArgumentException>(() =>
             new TestBooleanOperationAttribute(BooleanOperation.Null, 10));
     }
 
     [Fact]
-    public void FormatErrorMessage_ReturnsFormattedMessage()
-    {
+    public void FormatErrorMessage_ReturnsFormattedMessage() {
         var attribute = new GreaterThanAttribute(10);
         var message = attribute.FormatErrorMessage("TestProperty");
         Assert.Equal("TestProperty must be greater than 10.", message);
     }
 
     [Fact]
-    public void ValidationContext_WithInvalidValue_ReturnsValidationResult()
-    {
+    public void ValidationContext_WithInvalidValue_ReturnsValidationResult() {
         var model = new TestModel { Value = 5 };
         var context = new ValidationContext(model);
         var results = new List<ValidationResult>();
