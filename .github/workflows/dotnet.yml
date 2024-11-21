@@ -28,10 +28,10 @@ jobs:
       run: dotnet build --no-restore
 
     - name: Run Unit Tests
-      run: dotnet test EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal
+      run: dotnet test Tests/EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal
 
     - name: Run Functional Tests
-      run: dotnet test EerieLeap.Tests.Functional/EerieLeap.Tests.Functional.csproj --no-build --verbosity normal
+      run: dotnet test Tests/EerieLeap.Tests.Functional/EerieLeap.Tests.Functional.csproj --no-build --verbosity normal
       env:
         ASPNETCORE_ENVIRONMENT: Development
         DOTNET_ENVIRONMENT: Development
