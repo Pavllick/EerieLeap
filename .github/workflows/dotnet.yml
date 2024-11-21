@@ -15,21 +15,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
-    
+        dotnet-version: 8.0.203
+
     - name: Restore dependencies
       run: dotnet restore
-    
+
     - name: Build
       run: dotnet build --no-restore
-    
+
     - name: Run Unit Tests
       run: dotnet test EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal
-    
+
     - name: Run Functional Tests
       run: dotnet test EerieLeap.Tests.Functional/EerieLeap.Tests.Functional.csproj --no-build --verbosity normal
       env:
