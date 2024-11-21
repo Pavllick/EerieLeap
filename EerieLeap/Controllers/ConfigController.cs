@@ -26,7 +26,7 @@ public class ConfigController : ControllerBase {
 
             var combinedConfig = new CombinedConfig {
                 AdcConfig = adcConfig,
-                SensorConfigs = sensorConfigs.ToList()
+                SensorConfigs = sensorConfigs
             };
 
             return Ok(combinedConfig);
@@ -94,7 +94,7 @@ public class ConfigController : ControllerBase {
 
     [HttpPost("sensors")]
     [Validate]
-    public async Task<IActionResult> UpdateSensorConfigs([Required][FromBody] List<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateSensorConfigs([Required][FromBody] IEnumerable<SensorConfig> configs) {
         try {
             // Validate sensor IDs
             foreach (var config in configs)

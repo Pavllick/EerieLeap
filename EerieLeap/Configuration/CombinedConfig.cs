@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Configuration;
@@ -7,5 +8,5 @@ public class CombinedConfig {
     public AdcConfig AdcConfig { get; set; } = new();
 
     [Required]
-    public List<SensorConfig> SensorConfigs { get; set; } = new();
+    public IEnumerable<SensorConfig> SensorConfigs { get; set; } = new Collection<SensorConfig>();
 }
