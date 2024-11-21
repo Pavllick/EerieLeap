@@ -45,9 +45,6 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>,
     protected async Task<HttpResponseMessage> GetWithFullResponse(string url) =>
         await Client.GetAsync(url);
 
-    // protected async Task<HttpResponseMessage> PostAsync<T>(string url, T content) where T : class =>
-    //     await Client.PostAsJsonAsync(url, content);
-
     protected async Task<HttpResponseMessage> PostAsync<T>(string url, T content) where T : class {
         var response = await Client.PostAsJsonAsync(url, content);
         response.EnsureSuccessStatusCode();

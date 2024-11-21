@@ -5,9 +5,9 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap", "EerieLeap\EerieLeap.csproj", "{78CDA9FD-41C1-45E5-AFCC-188C25A4C5B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap.Tests.Unit", "EerieLeap.Tests.Unit\EerieLeap.Tests.Unit.csproj", "{C8CDA9FD-41C1-45E5-AFCC-188C25A4C5B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests\EerieLeap.Tests.Unit", "Tests\EerieLeap.Tests.Unit\EerieLeap.Tests.Unit.csproj", "{C8CDA9FD-41C1-45E5-AFCC-188C25A4C5B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap.Tests.Functional", "EerieLeap.Tests.Functional\EerieLeap.Tests.Functional.csproj", "{2F2558C9-936C-4EDF-9BAE-3B99AB742F7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests\EerieLeap.Tests.Functional", "Tests\EerieLeap.Tests.Functional\EerieLeap.Tests.Functional.csproj", "{2F2558C9-936C-4EDF-9BAE-3B99AB742F7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

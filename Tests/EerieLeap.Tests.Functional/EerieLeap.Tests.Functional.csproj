@@ -30,7 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EerieLeap\EerieLeap.csproj" />
+    <ProjectReference Include="../../EerieLeap/EerieLeap.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
   </ItemGroup>
 
 </Project>
