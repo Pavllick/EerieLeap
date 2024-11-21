@@ -77,7 +77,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             }
         }).ConfigureAwait(false);
 
-        await InitializeAdcAsync();
+        await InitializeAdcAsync().ConfigureAwait(false);
     }
 
     [Validate]
@@ -142,7 +142,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                     _logger.LogError("Channel not specified for physical sensor {Name}", sensor.Name);
                     continue;
                 }
-                var voltage = await adc.ReadChannelAsync(sensor.Channel.Value);
+                var voltage = await adc.ReadChannelAsync(sensor.Channel.Value).ConfigureAwait(false);
                 newReadings[sensor.Id] = ConvertVoltageToValue(voltage, sensor);
             } catch (Exception ex) {
                 _logger.LogError(ex, "Failed to read ADC sensor {Name}", sensor.Name);
@@ -190,8 +190,8 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                 Converters = { new JsonStringEnumConverter() }
             };
 
-            var adcJson = await File.ReadAllTextAsync(adcConfigPath);
-            var sensorsJson = await File.ReadAllTextAsync(sensorConfigPath);
+            var adcJson = await File.ReadAllTextAsync(adcConfigPath).ConfigureAwait(false);
+            var sensorsJson = await File.ReadAllTextAsync(sensorConfigPath).ConfigureAwait(false);
 
             _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, options) ?? throw new JsonException("Failed to deserialize ADC config");
             _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, options) ?? throw new JsonException("Failed to deserialize sensor configs");

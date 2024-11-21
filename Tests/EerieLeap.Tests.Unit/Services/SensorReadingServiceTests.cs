@@ -19,6 +19,7 @@ public class SensorReadingServiceTests : IDisposable {
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly SensorReadingService _service;
     private readonly string _testDir;
+    private bool _disposed;
 
     public SensorReadingServiceTests() {
         var tempDir = Path.GetTempPath();
@@ -42,10 +43,25 @@ public class SensorReadingServiceTests : IDisposable {
         _service = new SensorReadingService(_mockLogger.Object, adcFactory, _mockConfiguration.Object);
     }
 
-    public void Dispose() {
-        if (Directory.Exists(_testDir)) {
-            Directory.Delete(_testDir, true);
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _service?.Dispose();
+            }
+            if (Directory.Exists(_testDir)) {
+                Directory.Delete(_testDir, true);
+            }
+            _disposed = true;
         }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     [Fact]

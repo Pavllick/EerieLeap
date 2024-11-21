@@ -19,7 +19,7 @@ public class ReadingsController : ControllerBase {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReadingResult>>> GetReadings() {
         try {
-            var readings = await _sensorService.GetReadingsAsync();
+            var readings = await _sensorService.GetReadingsAsync().ConfigureAwait(false);
             return Ok(readings);
         } catch (Exception ex) {
             _logger.LogError(ex, "Failed to get sensor readings");
@@ -33,7 +33,7 @@ public class ReadingsController : ControllerBase {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
 
-            var reading = await _sensorService.GetReadingAsync(id);
+            var reading = await _sensorService.GetReadingAsync(id).ConfigureAwait(false);
             if (reading == null)
                 return NotFound($"Reading for sensor Id '{id}' not found");
 

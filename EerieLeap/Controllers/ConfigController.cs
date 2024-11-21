@@ -21,8 +21,8 @@ public class ConfigController : ControllerBase {
     [HttpGet]
     public async Task<ActionResult<CombinedConfig>> GetConfig() {
         try {
-            var adcConfig = await _sensorService.GetAdcConfigurationAsync();
-            var sensorConfigs = await _sensorService.GetSensorConfigurationsAsync();
+            var adcConfig = await _sensorService.GetAdcConfigurationAsync().ConfigureAwait(false);
+            var sensorConfigs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
 
             var combinedConfig = new CombinedConfig {
                 AdcConfig = adcConfig,
@@ -39,7 +39,7 @@ public class ConfigController : ControllerBase {
     [HttpGet("adc")]
     public async Task<ActionResult<AdcConfig>> GetAdcConfig() {
         try {
-            var config = await _sensorService.GetAdcConfigurationAsync();
+            var config = await _sensorService.GetAdcConfigurationAsync().ConfigureAwait(false);
             if (config == null)
                 return NotFound("ADC configuration not found");
 
@@ -54,7 +54,7 @@ public class ConfigController : ControllerBase {
     [Validate]
     public async Task<IActionResult> UpdateAdcConfig([Required][FromBody] AdcConfig config) {
         try {
-            await _sensorService.UpdateAdcConfigurationAsync(config);
+            await _sensorService.UpdateAdcConfigurationAsync(config).ConfigureAwait(false);
             return Ok();
         } catch (Exception ex) {
             _logger.LogError(ex, "Failed to update ADC configuration");
@@ -65,7 +65,7 @@ public class ConfigController : ControllerBase {
     [HttpGet("sensors")]
     public async Task<ActionResult<IEnumerable<SensorConfig>>> GetSensorConfigs() {
         try {
-            var configs = await _sensorService.GetSensorConfigurationsAsync();
+            var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
             return Ok(configs);
         } catch (Exception ex) {
             _logger.LogError(ex, "Failed to get sensor configurations");
@@ -79,7 +79,7 @@ public class ConfigController : ControllerBase {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
 
-            var configs = await _sensorService.GetSensorConfigurationsAsync();
+            var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
             var config = configs.FirstOrDefault(c => c.Id == id);
 
             if (config == null)
@@ -111,7 +111,7 @@ public class ConfigController : ControllerBase {
             if (duplicateIds.Any())
                 return BadRequest($"Duplicate sensor IDs found: {string.Join(", ", duplicateIds)}");
 
-            await _sensorService.UpdateSensorConfigurationsAsync(configs);
+            await _sensorService.UpdateSensorConfigurationsAsync(configs).ConfigureAwait(false);
             return Ok();
         } catch (Exception ex) {
             _logger.LogError(ex, "Failed to update sensor configurations");
