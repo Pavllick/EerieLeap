@@ -8,7 +8,7 @@ namespace EerieLeap.Utilities.DataAnnotations;
 /// Validation attribute that makes a property required only for virtual sensors.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class RequiredForVirtualSensorAttribute : ValidationAttribute
+public sealed class RequiredForVirtualSensorAttribute : ValidationAttribute
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Aspects;
 
-public class ValidateAttribute : OverrideMethodAspect {
+public sealed class ValidateAttribute : OverrideMethodAspect {
     public override dynamic? OverrideMethod() {
         foreach (var parameter in meta.Target.Parameters) {
             if (parameter.Value != null) {
