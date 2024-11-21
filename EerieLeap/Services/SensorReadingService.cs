@@ -13,6 +13,11 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
     private readonly AdcFactory _adcFactory;
     private readonly string _configPath;
     private readonly object _lock = new();
+    private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
+    private readonly JsonSerializerOptions _readOptions = new() { 
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
     private List<SensorConfig> _sensorConfigs;
     private AdcConfig _adcConfig;
     private IAdc? _adc;
@@ -72,7 +77,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         await Task.Run(() => {
             lock (_lock) {
                 _adcConfig = config;
-                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(config, _writeOptions);
                 File.WriteAllText(Path.Combine(_configPath, "adc.json"), json);
             }
         }).ConfigureAwait(false);
@@ -86,7 +91,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             lock (_lock) {
                 _sensorConfigs = configs.ToList();
                 _lastReadings.Clear(); // TODO: Should we clear readings only for changed sensors
-                var json = JsonSerializer.Serialize(_sensorConfigs, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(_sensorConfigs, _writeOptions);
                 File.WriteAllText(Path.Combine(_configPath, "sensors.json"), json);
             }
         }).ConfigureAwait(false);
@@ -185,16 +190,11 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
                 return;
             }
 
-            var options = new JsonSerializerOptions {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            };
-
             var adcJson = await File.ReadAllTextAsync(adcConfigPath).ConfigureAwait(false);
             var sensorsJson = await File.ReadAllTextAsync(sensorConfigPath).ConfigureAwait(false);
 
-            _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, options) ?? throw new JsonException("Failed to deserialize ADC config");
-            _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, options) ?? throw new JsonException("Failed to deserialize sensor configs");
+            _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, _readOptions) ?? throw new JsonException("Failed to deserialize ADC config");
+            _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, _readOptions) ?? throw new JsonException("Failed to deserialize sensor configs");
         } catch (Exception ex) {
             LogConfigLoadError(ex);
             throw;
@@ -214,9 +214,9 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         Directory.CreateDirectory(_configPath);
 
         File.WriteAllText(Path.Combine(_configPath, "adc.json"),
-            JsonSerializer.Serialize(_adcConfig, options));
+            JsonSerializer.Serialize(_adcConfig, _writeOptions));
         File.WriteAllText(Path.Combine(_configPath, "sensors.json"),
-            JsonSerializer.Serialize(_sensorConfigs, options));
+            JsonSerializer.Serialize(_sensorConfigs, _writeOptions));
     }
 
     private static AdcConfig CreateDefaultAdcConfig() {
