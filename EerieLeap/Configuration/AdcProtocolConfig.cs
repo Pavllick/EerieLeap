@@ -7,6 +7,7 @@ namespace EerieLeap.Configuration;
 public class AdcProtocolConfig {
     [Required]
     [JsonConverter(typeof(HexByteArrayConverter))]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "Irrelevant for configuration")]
     public byte[] CommandPrefix { get; set; } = new byte[] { 0x01 };
 
     [Required]

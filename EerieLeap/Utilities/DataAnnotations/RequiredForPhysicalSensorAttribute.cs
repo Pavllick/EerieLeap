@@ -8,11 +8,12 @@ namespace EerieLeap.Utilities.DataAnnotations;
 /// Validation attribute that makes a property required only for physical (non-virtual) sensors.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class RequiredForPhysicalSensorAttribute : ValidationAttribute
-{
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
-    {
+public sealed class RequiredForPhysicalSensorAttribute : ValidationAttribute {
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) {
+        ArgumentNullException.ThrowIfNull(validationContext);
+
         var sensorConfig = validationContext.ObjectInstance as SensorConfig;
+
         if (sensorConfig == null)
             return new ValidationResult("This attribute can only be used on SensorConfig properties",
                 new[] { validationContext.MemberName ?? string.Empty });

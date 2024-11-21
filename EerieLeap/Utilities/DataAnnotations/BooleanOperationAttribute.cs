@@ -12,8 +12,7 @@ public abstract class BooleanOperationAttribute : ValidationAttribute
         if ((int)booleanOperation <= (int)BooleanOperation.Null)
             throw new ArgumentException("Invalid boolean operation", nameof(booleanOperation));
         
-        if (operandValue == null)
-            throw new ArgumentNullException(nameof(operandValue));
+        ArgumentNullException.ThrowIfNull(operandValue);
 
         BooleanOperation = booleanOperation;
         OperandValue = operandValue;

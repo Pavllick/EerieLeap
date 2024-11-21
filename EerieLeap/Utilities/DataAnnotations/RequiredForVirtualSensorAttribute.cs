@@ -12,6 +12,8 @@ public sealed class RequiredForVirtualSensorAttribute : ValidationAttribute
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
+        ArgumentNullException.ThrowIfNull(validationContext);
+        
         var sensorConfig = validationContext.ObjectInstance as SensorConfig;
         if (sensorConfig == null)
             return new ValidationResult("This attribute can only be used on SensorConfig properties",

@@ -24,6 +24,8 @@ public static class ExpressionEvaluator {
     }
 
     public static double EvaluateWithSensors(string expression, Dictionary<string, double> sensorValues) {
+        ArgumentNullException.ThrowIfNull(sensorValues);
+
         var expr = new Expression(UnwrapVariables(expression));
         AddMathConstants(expr);
 

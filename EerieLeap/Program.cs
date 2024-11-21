@@ -1,11 +1,10 @@
 using EerieLeap.Hardware;
 using EerieLeap.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 
 namespace EerieLeap;
 
-public partial class Program {
+public static class Program {
     public static void Main(string[] args) {
         var builder = WebApplication.CreateBuilder(args);
 

@@ -94,7 +94,9 @@ public partial class ConfigController : ControllerBase {
 
     [HttpPost("sensors")]
     [Validate]
-    public async Task<IActionResult> UpdateSensorConfigs([Required][FromBody] IEnumerable<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateSensorConfigs([FromBody] IEnumerable<SensorConfig> configs) {
+        ArgumentNullException.ThrowIfNull(configs);
+
         try {
             // Validate sensor IDs
             foreach (var config in configs)

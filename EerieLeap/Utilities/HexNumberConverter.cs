@@ -52,14 +52,26 @@ public sealed class HexNumberConverter<T> : JsonConverter<T> where T : struct
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
+        ArgumentNullException.ThrowIfNull(writer);
+        
         string hex;
         if (typeof(T) == typeof(byte))
             hex = $"0x{(byte)(object)value:x2}";
         else if (typeof(T) == typeof(int))
             hex = $"0x{(int)(object)value:x}";
+        else if (typeof(T) == typeof(uint))
+            hex = $"0x{(uint)(object)value:x}";
+        else if (typeof(T) == typeof(long))
+            hex = $"0x{(long)(object)value:x}";
+        else if (typeof(T) == typeof(ulong))
+            hex = $"0x{(ulong)(object)value:x}";
+        else if (typeof(T) == typeof(short))
+            hex = $"0x{(short)(object)value:x}";
+        else if (typeof(T) == typeof(ushort))
+            hex = $"0x{(ushort)(object)value:x}";
         else
-            throw new JsonException($"Unsupported type for hex conversion: {typeof(T)}");
-            
+            throw new JsonException($"Unsupported type for hex number: {typeof(T)}");
+
         writer.WriteStringValue(hex);
     }
 }

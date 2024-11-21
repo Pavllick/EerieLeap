@@ -9,7 +9,7 @@ using Xunit;
 namespace EerieLeap.Tests.Functional.Controllers;
 
 public class ConfigControllerTests : FunctionalTestBase {
-    public ConfigControllerTests(WebApplicationFactory<Program> factory)
+    public ConfigControllerTests(WebApplicationFactory<TestStartup> factory)
         : base(factory) { }
 
     [Fact]

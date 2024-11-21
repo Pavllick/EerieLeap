@@ -43,6 +43,8 @@ public sealed class HexByteArrayConverter : JsonConverter<byte[]?>
 
     public override void Write(Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options)
     {
+        ArgumentNullException.ThrowIfNull(writer);
+        
         if (value == null)
         {
             writer.WriteNullValue();

@@ -6,11 +6,11 @@ using System.Device.Spi;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
 
-public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime {
-    protected readonly WebApplicationFactory<Program> Factory;
+public class FunctionalTestBase : IClassFixture<WebApplicationFactory<TestStartup>>, IAsyncLifetime {
+    protected readonly WebApplicationFactory<TestStartup> Factory;
     protected readonly HttpClient Client;
 
-    protected FunctionalTestBase(WebApplicationFactory<Program> factory) {
+    protected FunctionalTestBase(WebApplicationFactory<TestStartup> factory) {
         Factory = factory;
         Client = factory.CreateClient();
     }
