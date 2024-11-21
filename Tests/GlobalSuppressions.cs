@@ -6,7 +6,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 // Suppress ConfigureAwait warnings in test projects
-[assembly: SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", 
+[assembly: SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task",
     Justification = "ConfigureAwait(false) should not be used in test projects as per xUnit guidance")]
 
 // Suppress underscore naming in test methods - this is a common convention
@@ -51,3 +51,7 @@ using System.Diagnostics.CodeAnalysis;
 // Suppress argument validation warnings in test classes
 [assembly: SuppressMessage("Design", "CA1062:Validate arguments of public methods",
     Justification = "Test classes don't need argument validation")]
+
+// Suppress naming style warnings in test projects
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles",
+    Justification = "Test projects may use different naming conventions for clarity")]
