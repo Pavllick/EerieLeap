@@ -1,10 +1,10 @@
-using System.Text.Json;
 using EerieLeap.Configuration;
+using System.Security.Cryptography;
 
 namespace EerieLeap.Hardware;
 
 public sealed class MockAdc : IAdc {
-    private readonly Random _random = new();
+    private readonly RandomNumberGenerator _random = RandomNumberGenerator.Create();
     private AdcConfig? _config;
     private bool _isDisposed;
     private readonly Dictionary<int, double> _lastValues = new();
@@ -24,21 +24,21 @@ public sealed class MockAdc : IAdc {
         return await Task.Run(() => {
             // Initialize trend for this channel if not exists
             if (!_trends.ContainsKey(channel))
-                _trends[channel] = _random.NextDouble() * 2 - 1; // Random trend between -1 and 1
+                _trends[channel] = GetRandomDouble() * 2 - 1; // Random trend between -1 and 1
 
             // Initialize last value if not exists
             if (!_lastValues.ContainsKey(channel))
-                _lastValues[channel] = _random.NextDouble() * 3.3; // Initial value between 0 and 3.3V
+                _lastValues[channel] = GetRandomDouble() * 3.3; // Initial value between 0 and 3.3V
 
             // Randomly change trend sometimes
-            if (_random.NextDouble() < 0.1) // 10% chance to change trend
-                _trends[channel] = _random.NextDouble() * 2 - 1;
+            if (GetRandomDouble() < 0.1) // 10% chance to change trend
+                _trends[channel] = GetRandomDouble() * 2 - 1;
 
             // Calculate new value with some randomness and trend
             var currentValue = _lastValues[channel];
             var trend = _trends[channel];
             var maxChange = 0.1; // Maximum change per reading
-            var change = (trend * 0.8 + _random.NextDouble() * 0.4 - 0.2) * maxChange;
+            var change = (trend * 0.8 + GetRandomDouble() * 0.4 - 0.2) * maxChange;
 
             var newValue = currentValue + change;
 
@@ -52,10 +52,17 @@ public sealed class MockAdc : IAdc {
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    private double GetRandomDouble() {
+        var buffer = new byte[8];
+        _random.GetBytes(buffer);
+        return (double)BitConverter.ToUInt64(buffer, 0) / ulong.MaxValue;
+    }
+
     public void Dispose() {
         if (_isDisposed)
             return;
 
         _isDisposed = true;
+        _random.Dispose();
     }
 }
