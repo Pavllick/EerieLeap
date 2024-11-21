@@ -1,5 +1,7 @@
 namespace EerieLeap.Utilities;
 
+using System.Globalization;
+
 public static class StringExtensions
 {
     public static string SpaceCamelCase(this string text)
@@ -7,7 +9,7 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(text))
             return text;
 
-        var result = text[0].ToString().ToLower();
+        var result = text[0].ToString().ToLower(CultureInfo.InvariantCulture);
         var isInAcronym = char.IsUpper(text[0]) && text.Length > 1 && char.IsUpper(text[1]);
 
         for (int i = 1; i < text.Length; i++)
@@ -40,7 +42,7 @@ public static class StringExtensions
                     result += " ";
             }
             
-            result += char.ToLower(text[i]);
+            result += char.ToLower(text[i], CultureInfo.InvariantCulture);
             
             // Update acronym state
             if (currentIsUpper && nextIsUpper)

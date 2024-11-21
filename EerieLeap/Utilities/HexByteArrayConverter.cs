@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Globalization;
 
 namespace EerieLeap.Utilities;
 
@@ -54,6 +55,6 @@ public sealed class HexByteArrayConverter : JsonConverter<byte[]?>
             return;
         }
         
-        writer.WriteStringValue("0x" + Convert.ToHexString(value).ToLower());
+        writer.WriteStringValue("0x" + Convert.ToHexString(value).ToLower(CultureInfo.InvariantCulture));
     }
 }

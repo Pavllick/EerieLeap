@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Globalization;
 
 namespace EerieLeap.Utilities;
 
@@ -22,9 +23,9 @@ public sealed class HexNumberConverter<T> : JsonConverter<T> where T : struct
             {
                 // Parse hex string to number
                 if (typeof(T) == typeof(byte))
-                    return (T)(object)byte.Parse(hex, System.Globalization.NumberStyles.HexNumber);
+                    return (T)(object)byte.Parse(hex, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 if (typeof(T) == typeof(int))
-                    return (T)(object)int.Parse(hex, System.Globalization.NumberStyles.HexNumber);
+                    return (T)(object)int.Parse(hex, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 
                 throw new JsonException($"Unsupported type for hex conversion: {typeof(T)}");
             }
