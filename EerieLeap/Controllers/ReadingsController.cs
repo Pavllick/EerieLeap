@@ -2,6 +2,8 @@ using EerieLeap.Services;
 using EerieLeap.Types;
 using EerieLeap.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Controllers;
 
@@ -21,9 +23,12 @@ public partial class ReadingsController : ControllerBase {
         try {
             var readings = await _sensorService.GetReadingsAsync().ConfigureAwait(false);
             return Ok(readings);
-        } catch (Exception ex) {
+        } catch (InvalidOperationException ex) {
             LogReadingsError(ex);
-            return StatusCode(500, "Failed to get sensor readings");
+            return StatusCode(500, "Sensor readings are not available - service may be initializing");
+        } catch (JsonException ex) {
+            LogReadingsError(ex);
+            return StatusCode(500, "Failed to process sensor readings data");
         }
     }
 
@@ -38,9 +43,12 @@ public partial class ReadingsController : ControllerBase {
                 return NotFound($"Reading for sensor Id '{id}' not found");
 
             return Ok(reading);
-        } catch (Exception ex) {
+        } catch (InvalidOperationException ex) {
             LogReadingError(id, ex);
-            return StatusCode(500, $"Failed to get sensor reading for {id}");
+            return StatusCode(500, $"Sensor reading for {id} is not available - service may be initializing");
+        } catch (ArgumentException ex) {
+            LogReadingError(id, ex);
+            return BadRequest($"Invalid sensor configuration for {id}");
         }
     }
 

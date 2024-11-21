@@ -4,6 +4,7 @@ using EerieLeap.Configuration;
 using EerieLeap.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace EerieLeap.Controllers;
 
@@ -30,9 +31,15 @@ public partial class ConfigController : ControllerBase {
             };
 
             return Ok(combinedConfig);
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogCombinedConfigError(ex);
-            return StatusCode(500, "Failed to get combined configuration");
+            return StatusCode(500, "Invalid configuration format");
+        } catch (IOException ex) {
+            LogCombinedConfigError(ex);
+            return StatusCode(500, "Failed to read configuration files");
+        } catch (InvalidOperationException ex) {
+            LogCombinedConfigError(ex);
+            return StatusCode(500, "Configuration is in an invalid state");
         }
     }
 
@@ -44,9 +51,15 @@ public partial class ConfigController : ControllerBase {
                 return NotFound("ADC configuration not found");
 
             return Ok(config);
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogAdcConfigError(ex);
-            return StatusCode(500, "Failed to get ADC configuration");
+            return StatusCode(500, "Invalid ADC configuration format");
+        } catch (IOException ex) {
+            LogAdcConfigError(ex);
+            return StatusCode(500, "Failed to read ADC configuration file");
+        } catch (InvalidOperationException ex) {
+            LogAdcConfigError(ex);
+            return StatusCode(500, "ADC configuration is in an invalid state");
         }
     }
 
@@ -56,9 +69,15 @@ public partial class ConfigController : ControllerBase {
         try {
             await _sensorService.UpdateAdcConfigurationAsync(config).ConfigureAwait(false);
             return Ok();
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogAdcConfigUpdateError(ex);
-            return StatusCode(500, "Failed to update ADC configuration");
+            return StatusCode(500, "Failed to serialize ADC configuration");
+        } catch (IOException ex) {
+            LogAdcConfigUpdateError(ex);
+            return StatusCode(500, "Failed to write ADC configuration file");
+        } catch (ValidationException ex) {
+            LogAdcConfigUpdateError(ex);
+            return BadRequest(ex.Message);
         }
     }
 
@@ -67,9 +86,15 @@ public partial class ConfigController : ControllerBase {
         try {
             var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
             return Ok(configs);
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogSensorConfigsError(ex);
-            return StatusCode(500, "Failed to get sensor configurations");
+            return StatusCode(500, "Invalid sensor configuration format");
+        } catch (IOException ex) {
+            LogSensorConfigsError(ex);
+            return StatusCode(500, "Failed to read sensor configuration file");
+        } catch (InvalidOperationException ex) {
+            LogSensorConfigsError(ex);
+            return StatusCode(500, "Sensor configuration is in an invalid state");
         }
     }
 
@@ -86,9 +111,15 @@ public partial class ConfigController : ControllerBase {
                 return NotFound($"Sensor configuration with Id '{id}' not found");
 
             return Ok(config);
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogSensorConfigError(id, ex);
-            return StatusCode(500, "Failed to get sensor configuration");
+            return StatusCode(500, "Invalid sensor configuration format");
+        } catch (IOException ex) {
+            LogSensorConfigError(id, ex);
+            return StatusCode(500, "Failed to read sensor configuration file");
+        } catch (InvalidOperationException ex) {
+            LogSensorConfigError(id, ex);
+            return StatusCode(500, "Sensor configuration is in an invalid state");
         }
     }
 
@@ -112,9 +143,15 @@ public partial class ConfigController : ControllerBase {
             await _sensorService.UpdateSensorConfigurationsAsync(configsList).ConfigureAwait(false);
 
             return Ok();
-        } catch (Exception ex) {
+        } catch (JsonException ex) {
             LogSensorConfigsUpdateError(ex);
-            return StatusCode(500, "Failed to update sensor configurations");
+            return StatusCode(500, "Failed to serialize sensor configurations");
+        } catch (IOException ex) {
+            LogSensorConfigsUpdateError(ex);
+            return StatusCode(500, "Failed to write sensor configuration file");
+        } catch (ValidationException ex) {
+            LogSensorConfigsUpdateError(ex);
+            return BadRequest(ex.Message);
         }
     }
 

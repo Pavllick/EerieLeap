@@ -14,7 +14,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
     private readonly string _configPath;
     private readonly object _lock = new();
     private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
-    private readonly JsonSerializerOptions _readOptions = new() { 
+    private readonly JsonSerializerOptions _readOptions = new() {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
     };
@@ -149,7 +149,11 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
                 }
                 var voltage = await adc.ReadChannelAsync(sensor.Channel.Value).ConfigureAwait(false);
                 newReadings[sensor.Id] = ConvertVoltageToValue(voltage, sensor);
-            } catch (Exception ex) {
+            } catch (InvalidOperationException ex) {
+                LogReadSensorError(sensor.Name, ex);
+            } catch (ArgumentOutOfRangeException ex) {
+                LogReadSensorError(sensor.Name, ex);
+            } catch (TimeoutException ex) {
                 LogReadSensorError(sensor.Name, ex);
             }
         }
@@ -170,7 +174,9 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
                 newReadings[sensor.Id] = ExpressionEvaluator.EvaluateWithSensors(
                     sensor.ConversionExpression,
                     sensorValues);
-            } catch (Exception ex) {
+            } catch (ArgumentException ex) {
+                LogVirtualSensorError(sensor.Name, ex);
+            } catch (InvalidOperationException ex) {
                 LogVirtualSensorError(sensor.Name, ex);
             }
         }
@@ -240,9 +246,8 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         };
     }
 
-    private static SensorConfig[] CreateDefaultSensorConfigs() {
-        return new SensorConfig[]
-        {
+    private static SensorConfig[] CreateDefaultSensorConfigs() =>
+        [
             new() {
                 Id = "coolant_temp",
                 Name = "Coolant Temperature",
@@ -277,8 +282,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
                 SamplingRateMs = 1000,
                 ConversionExpression = "({coolant_temp} + {oil_temp}) / 2 * Sin(PI/4)"
             }
-        };
-    }
+        ];
 
     private Task InitializeAdcAsync() {
         try {
