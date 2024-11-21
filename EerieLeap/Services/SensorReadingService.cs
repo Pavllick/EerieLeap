@@ -316,4 +316,10 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
 
         return ((voltage - sensor.MinVoltage.Value) / voltageRange * valueRange) + sensor.MinValue.Value;
     }
+
+    public sealed override void Dispose()
+    {
+        _adc?.Dispose();
+        base.Dispose();
+    }
 }

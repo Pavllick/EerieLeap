@@ -91,14 +91,24 @@ public abstract class SpiAdc : IAdc, IDisposable {
         );
     }
 
-    public void Dispose() {
+    protected virtual void Dispose(bool disposing)
+    {
         if (_isDisposed)
             return;
 
-        _spiDevice?.Dispose();
-        _spiDevice = null;
-        _config = null;
+        if (disposing)
+        {
+            _spiDevice?.Dispose();
+            _spiDevice = null;
+            _config = null;
+        }
+
         _isDisposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 }
