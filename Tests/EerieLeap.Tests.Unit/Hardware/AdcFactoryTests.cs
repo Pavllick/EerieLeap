@@ -1,7 +1,7 @@
 using EerieLeap.Hardware;
-using Xunit;
-using Moq;
 using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace EerieLeap.Tests.Unit.Hardware;
 
@@ -9,9 +9,10 @@ public class AdcFactoryTests {
     [Fact]
     public void CreateAdc_WhenCalled_ShouldReturnAdcInstance() {
         // Arrange
-        var mockFactoryLogger = new Mock<ILogger<AdcFactory>>();
-        var mockAdcLogger = new Mock<ILogger<Adc>>();
-        var factory = new AdcFactory(mockFactoryLogger.Object, mockAdcLogger.Object);
+        var mockLogger = new Mock<ILogger>();
+        mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+        
+        var factory = new AdcFactory(mockLogger.Object);
 
         // Act
         var adc = factory.CreateAdc();
@@ -19,5 +20,13 @@ public class AdcFactoryTests {
         // Assert
         Assert.NotNull(adc);
         Assert.IsType<MockAdc>(adc);
+
+        mockLogger.Verify(x => x.Log(
+            LogLevel.Information,
+            It.IsAny<EventId>(),
+            It.Is<It.IsAnyType>((state, type) => true),
+            It.IsAny<Exception>(),
+            (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+            Times.Once);
     }
 }

@@ -7,11 +7,11 @@ namespace EerieLeap.Controllers;
 
 [ApiController]
 [Route("api/v1/readings")]
-public class ReadingsController : ControllerBase {
-    private readonly ILogger<ReadingsController> _logger;
+public partial class ReadingsController : ControllerBase {
+    private readonly ILogger _logger;
     private readonly ISensorReadingService _sensorService;
 
-    public ReadingsController(ISensorReadingService sensorService, ILogger<ReadingsController> logger) {
+    public ReadingsController(ISensorReadingService sensorService, ILogger logger) {
         _sensorService = sensorService;
         _logger = logger;
     }
@@ -22,7 +22,7 @@ public class ReadingsController : ControllerBase {
             var readings = await _sensorService.GetReadingsAsync().ConfigureAwait(false);
             return Ok(readings);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get sensor readings");
+            LogReadingsError(ex);
             return StatusCode(500, "Failed to get sensor readings");
         }
     }
@@ -39,8 +39,18 @@ public class ReadingsController : ControllerBase {
 
             return Ok(reading);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get sensor reading for {Id}", id);
+            LogReadingError(id, ex);
             return StatusCode(500, $"Failed to get sensor reading for {id}");
         }
     }
+
+    #region Loggers
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get sensor readings")]
+    private partial void LogReadingsError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to get sensor reading for {id}")]
+    private partial void LogReadingError(string id, Exception ex);
+
+    #endregion
 }

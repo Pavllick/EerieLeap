@@ -1,4 +1,8 @@
+using System;
+using System.Buffers;
 using System.Device.Spi;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using EerieLeap.Configuration;
 
@@ -7,7 +11,7 @@ namespace EerieLeap.Hardware;
 /// <summary>
 /// Base class for SPI-based ADC implementations
 /// </summary>
-public abstract class SpiAdc : IAdc, IDisposable {
+public abstract partial class SpiAdc : IAdc, IDisposable {
     private readonly ILogger _logger;
     private SpiDevice? _spiDevice;
     private AdcConfig? _config;
@@ -30,23 +34,19 @@ public abstract class SpiAdc : IAdc, IDisposable {
         _spiDevice = SpiDevice.Create(settings);
         _config = config;
 
-        _logger.LogInformation(
-            "Configured ADC: Type={Type}, Bus={Bus}, CS={CS}, Clock={Clock}Hz, Mode={Mode}, Resolution={Resolution}bit",
+        LogConfiguration(
             config.Type,
             config.BusId,
             config.ChipSelect,
             config.ClockFrequency,
-            config.Mode,
-            config.Resolution
-        );
+            (int)config.Mode,
+            config.Resolution);
 
-        _logger.LogDebug(
-            "ADC Protocol: CommandPrefix={Prefix}, ChannelMask={ChMask}, ResultMask={ResMask}, ReadBytes={Bytes}",
+        LogProtocol(
             BitConverter.ToString(config.Protocol.CommandPrefix),
             Convert.ToString(config.Protocol.ChannelMask, 2).PadLeft(8, '0'),
             Convert.ToString(config.Protocol.ResultBitMask, 2),
-            config.Protocol.ReadByteCount
-        );
+            config.Protocol.ReadByteCount);
     }
 
     public abstract Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default);
@@ -83,21 +83,14 @@ public abstract class SpiAdc : IAdc, IDisposable {
     }
 
     protected void LogReading(int channel, int rawValue, double voltage) {
-        _logger.LogTrace(
-            "Channel {Channel}: Raw={Raw}, Voltage={Voltage:F3}V",
-            channel,
-            rawValue,
-            voltage
-        );
+        LogChannelReading(channel, rawValue, voltage);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
+    protected virtual void Dispose(bool disposing) {
         if (_isDisposed)
             return;
 
-        if (disposing)
-        {
+        if (disposing) {
             _spiDevice?.Dispose();
             _spiDevice = null;
             _config = null;
@@ -106,9 +99,27 @@ public abstract class SpiAdc : IAdc, IDisposable {
         _isDisposed = true;
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    #region Loggers
+
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1,
+        Message = "Configured ADC: Type={type}, Bus={bus}, CS={cs}, Clock={clock}Hz, Mode={mode}, Resolution={resolution}bit")]
+    private partial void LogConfiguration(
+        string type, int bus, int cs, int clock, int mode, int resolution);
+
+    [LoggerMessage(Level = LogLevel.Debug, EventId = 2,
+        Message = "ADC Protocol: CommandPrefix={prefix}, ChannelMask={channelMask}, ResultMask={resultMask}, ReadBytes={readBytes}")]
+    private partial void LogProtocol(
+        string prefix, string channelMask, string resultMask, int readBytes);
+
+    [LoggerMessage(Level = LogLevel.Trace, EventId = 3,
+        Message = "Channel {channel}: Raw={raw}, Voltage={voltage:F3}V")]
+    private partial void LogChannelReading(
+        int channel, int raw, double voltage);
+
+    #endregion
 }

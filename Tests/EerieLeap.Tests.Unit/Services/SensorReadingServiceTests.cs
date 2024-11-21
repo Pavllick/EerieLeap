@@ -13,9 +13,8 @@ namespace EerieLeap.Tests.Unit.Services;
 
 public class SensorReadingServiceTests : IDisposable {
     private readonly string _testConfigPath;
-    private readonly Mock<ILogger<SensorReadingService>> _mockLogger;
-    private readonly Mock<ILogger<AdcFactory>> _mockAdcFactoryLogger;
-    private readonly Mock<ILogger<Adc>> _mockAdcLogger;
+    private readonly Mock<ILogger> _mockLogger;
+    private readonly Mock<ILogger> _mockAdcFactoryLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly SensorReadingService _service;
     private readonly string _testDir;
@@ -30,25 +29,26 @@ public class SensorReadingServiceTests : IDisposable {
         Directory.CreateDirectory(_testDir);
         _testConfigPath = _testDir;
 
-        _mockLogger = new Mock<ILogger<SensorReadingService>>();
-        _mockAdcFactoryLogger = new Mock<ILogger<AdcFactory>>();
-        _mockAdcLogger = new Mock<ILogger<Adc>>();
+        _mockLogger = new Mock<ILogger>();
+        _mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+
+        _mockAdcFactoryLogger = new Mock<ILogger>();
+        _mockAdcFactoryLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+
         _mockConfiguration = new Mock<IConfiguration>();
 
         var configSection = new Mock<IConfigurationSection>();
         configSection.Setup(x => x.Value).Returns(_testConfigPath);
         _mockConfiguration.Setup(x => x.GetSection("ConfigurationPath")).Returns(configSection.Object);
+        configSection.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
 
-        var adcFactory = new AdcFactory(_mockAdcFactoryLogger.Object, _mockAdcLogger.Object);
+        var adcFactory = new AdcFactory(_mockAdcFactoryLogger.Object);
         _service = new SensorReadingService(_mockLogger.Object, adcFactory, _mockConfiguration.Object);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
+    protected virtual void Dispose(bool disposing) {
+        if (!_disposed) {
+            if (disposing) {
                 _service?.Dispose();
             }
             if (Directory.Exists(_testDir)) {
@@ -58,8 +58,7 @@ public class SensorReadingServiceTests : IDisposable {
         }
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
@@ -126,17 +125,18 @@ public class SensorReadingServiceTests : IDisposable {
 
         // Act & Assert
         await _service.StartAsync(CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<JsonException>(() =>
+            _service.WaitForInitializationAsync());
 
-        var ex = await Assert.ThrowsAsync<JsonException>(() => _service.WaitForInitializationAsync());
-        Assert.Contains("invalid start of a property name", ex.Message);
+        Assert.Contains("invalid start of a property", ex.Message);
 
         _mockLogger.Verify(
             x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
+            LogLevel.Error,
+            It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to load configurations")),
                 It.Is<Exception>(ex => ex is JsonException),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
             Times.Once);
     }
 }

@@ -9,11 +9,11 @@ namespace EerieLeap.Controllers;
 
 [ApiController]
 [Route("api/v1/config")]
-public class ConfigController : ControllerBase {
-    private readonly ILogger<ConfigController> _logger;
+public partial class ConfigController : ControllerBase {
+    private readonly ILogger _logger;
     private readonly ISensorReadingService _sensorService;
 
-    public ConfigController(ILogger<ConfigController> logger, ISensorReadingService sensorService) {
+    public ConfigController(ILogger logger, ISensorReadingService sensorService) {
         _logger = logger;
         _sensorService = sensorService;
     }
@@ -31,7 +31,7 @@ public class ConfigController : ControllerBase {
 
             return Ok(combinedConfig);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get combined configuration");
+            LogCombinedConfigError(ex);
             return StatusCode(500, "Failed to get combined configuration");
         }
     }
@@ -45,7 +45,7 @@ public class ConfigController : ControllerBase {
 
             return Ok(config);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get ADC configuration");
+            LogAdcConfigError(ex);
             return StatusCode(500, "Failed to get ADC configuration");
         }
     }
@@ -57,7 +57,7 @@ public class ConfigController : ControllerBase {
             await _sensorService.UpdateAdcConfigurationAsync(config).ConfigureAwait(false);
             return Ok();
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to update ADC configuration");
+            LogAdcConfigUpdateError(ex);
             return StatusCode(500, "Failed to update ADC configuration");
         }
     }
@@ -68,7 +68,7 @@ public class ConfigController : ControllerBase {
             var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
             return Ok(configs);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get sensor configurations");
+            LogSensorConfigsError(ex);
             return StatusCode(500, "Failed to get sensor configurations");
         }
     }
@@ -87,7 +87,7 @@ public class ConfigController : ControllerBase {
 
             return Ok(config);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to get sensor configuration for Id {Id}", id);
+            LogSensorConfigError(id, ex);
             return StatusCode(500, "Failed to get sensor configuration");
         }
     }
@@ -114,8 +114,30 @@ public class ConfigController : ControllerBase {
             await _sensorService.UpdateSensorConfigurationsAsync(configs).ConfigureAwait(false);
             return Ok();
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to update sensor configurations");
+            LogSensorConfigsUpdateError(ex);
             return StatusCode(500, "Failed to update sensor configurations");
         }
     }
+
+    #region Loggers
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get combined configuration")]
+    private partial void LogCombinedConfigError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to get ADC configuration")]
+    private partial void LogAdcConfigError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 3, Message = "Failed to update ADC configuration")]
+    private partial void LogAdcConfigUpdateError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 4, Message = "Failed to get sensor configurations")]
+    private partial void LogSensorConfigsError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 5, Message = "Failed to get sensor configuration for Id {id}")]
+    private partial void LogSensorConfigError(string id, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 6, Message = "Failed to update sensor configurations")]
+    private partial void LogSensorConfigsUpdateError(Exception ex);
+
+    #endregion
 }

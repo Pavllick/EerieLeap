@@ -1,28 +1,32 @@
-using Microsoft.Extensions.Logging;
-
 namespace EerieLeap.Hardware;
 
-public sealed class AdcFactory : IAdcFactory {
-    private readonly ILogger<AdcFactory> _logger;
-    private readonly ILogger<Adc> _adcLogger;
+public sealed partial class AdcFactory : IAdcFactory {
+    private readonly ILogger _logger;
     private readonly bool _isDevelopment;
 
-    public AdcFactory(
-        ILogger<AdcFactory> logger,
-        ILogger<Adc> adcLogger,
-        bool isDevelopment = true) {
+    public AdcFactory(ILogger logger, bool isDevelopment = true) {
         _logger = logger;
-        _adcLogger = adcLogger;
         _isDevelopment = isDevelopment;
     }
 
     public IAdc CreateAdc() {
         if (_isDevelopment) {
-            _logger.LogInformation("Using MockAdc for development environment");
+            LogUsingMockAdc();
             return new MockAdc();
         }
 
-        _logger.LogInformation("Creating ADC");
-        return new Adc(_adcLogger);
+        LogCreatingAdc();
+
+        return new Adc(_logger);
     }
+
+    #region Loggers
+
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1, Message = "Creating ADC")]
+    private partial void LogCreatingAdc();
+
+    [LoggerMessage(Level = LogLevel.Information, EventId = 2, Message = "Using mock ADC for testing")]
+    private partial void LogUsingMockAdc();
+
+    #endregion
 }

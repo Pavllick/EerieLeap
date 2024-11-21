@@ -1,5 +1,7 @@
 using EerieLeap.Hardware;
 using EerieLeap.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace EerieLeap;
 
@@ -11,6 +13,13 @@ public partial class Program {
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
+        // Configure logging
+        builder.Services.AddLogging();
+        builder.Services.TryAddSingleton(typeof(ILogger), sp => {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return loggerFactory.CreateLogger("EerieLeap");
+        });
 
         // Add our services
         builder.Services.AddSingleton<AdcFactory>();

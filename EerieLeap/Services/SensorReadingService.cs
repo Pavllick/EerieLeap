@@ -8,8 +8,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Services;
 
-public sealed class SensorReadingService : BackgroundService, ISensorReadingService {
-    private readonly ILogger<SensorReadingService> _logger;
+public sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
+    private readonly ILogger _logger;
     private readonly AdcFactory _adcFactory;
     private readonly string _configPath;
     private readonly object _lock = new();
@@ -20,7 +20,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
     private TaskCompletionSource<bool>? _initializationTcs;
 
     public SensorReadingService(
-        ILogger<SensorReadingService> logger,
+        ILogger logger,
         AdcFactory adcFactory,
         IConfiguration configuration) {
         _logger = logger;
@@ -108,7 +108,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                     // Normal shutdown, no need to log error
                     break;
                 } catch (Exception ex) {
-                    _logger.LogError(ex, "Error updating readings");
+                    LogUpdateReadingsError(ex);
                     throw;
                 }
             }
@@ -139,13 +139,13 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
         foreach (var sensor in sensors.Where(s => s.Type != SensorType.Virtual)) {
             try {
                 if (sensor.Channel == null) {
-                    _logger.LogError("Channel not specified for physical sensor {Name}", sensor.Name);
+                    LogChannelNotSpecified(sensor.Name, null);
                     continue;
                 }
                 var voltage = await adc.ReadChannelAsync(sensor.Channel.Value).ConfigureAwait(false);
                 newReadings[sensor.Id] = ConvertVoltageToValue(voltage, sensor);
             } catch (Exception ex) {
-                _logger.LogError(ex, "Failed to read ADC sensor {Name}", sensor.Name);
+                LogReadSensorError(sensor.Name, ex);
             }
         }
 
@@ -153,7 +153,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
         foreach (var sensor in sensors.Where(s => s.Type == SensorType.Virtual)) {
             try {
                 if (string.IsNullOrEmpty(sensor.ConversionExpression)) {
-                    _logger.LogWarning("Virtual sensor {Name} has invalid configuration - missing expression", sensor.Name);
+                    LogInvalidVirtualSensor(sensor.Name, null);
                     continue;
                 }
 
@@ -166,7 +166,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
                     sensor.ConversionExpression,
                     sensorValues);
             } catch (Exception ex) {
-                _logger.LogError(ex, "Failed to evaluate virtual sensor {Name}", sensor.Name);
+                LogVirtualSensorError(sensor.Name, ex);
             }
         }
 
@@ -196,7 +196,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             _adcConfig = JsonSerializer.Deserialize<AdcConfig>(adcJson, options) ?? throw new JsonException("Failed to deserialize ADC config");
             _sensorConfigs = JsonSerializer.Deserialize<List<SensorConfig>>(sensorsJson, options) ?? throw new JsonException("Failed to deserialize sensor configs");
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to load configurations");
+            LogConfigLoadError(ex);
             throw;
         }
     }
@@ -289,7 +289,7 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
             }
             return Task.CompletedTask;
         } catch (Exception ex) {
-            _logger.LogError(ex, "Failed to initialize ADC");
+            LogAdcInitError(ex);
             throw;
         }
     }
@@ -317,9 +317,33 @@ public sealed class SensorReadingService : BackgroundService, ISensorReadingServ
         return ((voltage - sensor.MinVoltage.Value) / voltageRange * valueRange) + sensor.MinValue.Value;
     }
 
-    public sealed override void Dispose()
-    {
+    public sealed override void Dispose() {
         _adc?.Dispose();
         base.Dispose();
     }
+
+    #region Loggers
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Channel not specified for physical sensor {Name}")]
+    private partial void LogChannelNotSpecified(string name, Exception? ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to read ADC sensor {Name}")]
+    private partial void LogReadSensorError(string name, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Warning, EventId = 3, Message = "Virtual sensor {Name} has invalid configuration - missing expression")]
+    private partial void LogInvalidVirtualSensor(string name, Exception? ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 4, Message = "Failed to evaluate virtual sensor {Name}")]
+    private partial void LogVirtualSensorError(string name, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 5, Message = "Failed to load configurations")]
+    private partial void LogConfigLoadError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 6, Message = "Failed to initialize ADC")]
+    private partial void LogAdcInitError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, EventId = 7, Message = "Error updating readings")]
+    private partial void LogUpdateReadingsError(Exception ex);
+
+    #endregion
 }
