@@ -1,5 +1,4 @@
 using EerieLeap.Hardware;
-using EerieLeap.Aspects;
 using EerieLeap.Configuration;
 using EerieLeap.Types;
 using System.Text.Json;
@@ -72,7 +71,6 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         }).ConfigureAwait(false);
     }
 
-    [Validate]
     public async Task UpdateAdcConfigurationAsync([Required] AdcConfig config) {
         await Task.Run(() => {
             lock (_lock) {
@@ -85,7 +83,6 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         await InitializeAdcAsync().ConfigureAwait(false);
     }
 
-    [Validate]
     public async Task UpdateSensorConfigurationsAsync([Required] IEnumerable<SensorConfig> configs) {
         await Task.Run(() => {
             lock (_lock) {

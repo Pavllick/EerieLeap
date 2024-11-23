@@ -1,4 +1,5 @@
 using NCalc;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace EerieLeap.Services;
@@ -23,9 +24,7 @@ public static class ExpressionEvaluator {
         throw new InvalidOperationException($"Expression evaluation did not return a number: {result}");
     }
 
-    public static double EvaluateWithSensors(string expression, Dictionary<string, double> sensorValues) {
-        ArgumentNullException.ThrowIfNull(sensorValues);
-
+    public static double EvaluateWithSensors([Required] string expression, [Required] Dictionary<string, double> sensorValues) {
         var expr = new Expression(UnwrapVariables(expression));
         AddMathConstants(expr);
 

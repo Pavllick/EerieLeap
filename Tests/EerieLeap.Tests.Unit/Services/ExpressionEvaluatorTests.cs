@@ -70,4 +70,28 @@ public class ExpressionEvaluatorTests {
         // Act & Assert
         Assert.Throws<ArgumentException>(() => ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
     }
+
+    [Fact]
+    public void EvaluateWithSensors_WithNullSensorValues_ThrowsArgumentNullException() {
+        // Arrange
+        const string expression = "1 + 2";
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => ExpressionEvaluator.EvaluateWithSensors(expression, null!));
+    }
+
+    // TODO: Enable when validation is implemented
+    // [Theory]
+    // [InlineData("")]
+    // [InlineData(" ")]
+    // [InlineData("\t")]
+    // public void EvaluateWithSensors_WithEmptyExpression_ThrowsValidationException(string expression) {
+    //     // Arrange
+    //     var sensorValues = new Dictionary<string, double> { { "sensor1", 1.0 } };
+
+    //     // Act & Assert
+    //     var ex = Assert.Throws<ValidationException>(() =>
+    //         ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
+    //     Assert.Contains("expression", ex.Message, StringComparison.OrdinalIgnoreCase);
+    // }
 }

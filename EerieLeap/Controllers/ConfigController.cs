@@ -1,5 +1,4 @@
 using EerieLeap.Services;
-using EerieLeap.Aspects;
 using EerieLeap.Configuration;
 using EerieLeap.Utilities;
 using Microsoft.AspNetCore.Mvc;
@@ -64,8 +63,7 @@ public partial class ConfigController : ControllerBase {
     }
 
     [HttpPost("adc")]
-    [Validate]
-    public async Task<IActionResult> UpdateAdcConfig([Required][FromBody] AdcConfig config) {
+    public async Task<IActionResult> UpdateAdcConfig([FromBody] AdcConfig config) {
         try {
             await _sensorService.UpdateAdcConfigurationAsync(config).ConfigureAwait(false);
             return Ok();
@@ -124,10 +122,7 @@ public partial class ConfigController : ControllerBase {
     }
 
     [HttpPost("sensors")]
-    [Validate]
     public async Task<IActionResult> UpdateSensorConfigs([FromBody] IEnumerable<SensorConfig> configs) {
-        ArgumentNullException.ThrowIfNull(configs);
-
         try {
             var configsList = configs.ToList();
 

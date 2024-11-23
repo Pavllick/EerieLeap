@@ -5,12 +5,17 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using System.Device.Spi;
 using System.Net;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
 public class ConfigControllerTests : FunctionalTestBase {
-    public ConfigControllerTests(WebApplicationFactory<TestStartup> factory)
-        : base(factory) { }
+    private readonly ITestOutputHelper _output;
+
+    public ConfigControllerTests(WebApplicationFactory<TestStartup> factory, ITestOutputHelper output)
+        : base(factory) {
+        _output = output;
+    }
 
     [Fact]
     public async Task GetConfig_ReturnsSuccessStatusCode() {
@@ -254,11 +259,20 @@ public class ConfigControllerTests : FunctionalTestBase {
             }
         };
 
-        // Act & Assert
+        Assert.Single(configs);
+
+        // Act
         var exception = await Assert.ThrowsAsync<HttpRequestException>(async () => {
             var response = await PostAsync("api/v1/config/sensors", configs);
             response.EnsureSuccessStatusCode();
         });
+
+        // var response = await PostWithFullResponse("api/v1/config/sensors", configs);
+        // var content = await response.Content.ReadAsStringAsync();
+        // _output.WriteLine($"Response Status: {response.StatusCode}");
+        // _output.WriteLine($"Response Content: {content}");
+
+        // Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         Assert.Contains("400", exception.Message);
     }

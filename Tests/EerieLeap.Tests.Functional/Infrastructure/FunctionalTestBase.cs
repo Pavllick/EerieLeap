@@ -4,7 +4,6 @@ using Xunit;
 using EerieLeap.Configuration;
 using System.Device.Spi;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
@@ -14,13 +13,14 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<TestStartu
     protected readonly HttpClient Client;
 
     protected FunctionalTestBase(WebApplicationFactory<TestStartup> factory) {
-        // Configure the factory to use minimal logging
         Factory = factory.WithWebHostBuilder(builder => {
             builder.ConfigureServices(services => {
                 services.AddLogging(logging => {
-                    logging.ClearProviders();
-                    logging.AddFilter((category, level) =>
-                        level >= LogLevel.Error);
+                    // logging.ClearProviders();
+                    // logging.AddFilter((category, level) =>
+                    //     level >= LogLevel.Error);
+                    logging.AddDebug();
+                    logging.SetMinimumLevel(LogLevel.Debug);
                 });
             });
         });
