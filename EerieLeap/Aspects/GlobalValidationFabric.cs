@@ -53,10 +53,12 @@ public sealed class MethodValidationAspect : OverrideMethodAspect {
 
     public override dynamic? OverrideMethod() {
         foreach (var parameter in meta.Target.Parameters) {
-            Validator.ValidateObject(
+            if (parameter.Value != null) {
+                Validator.ValidateObject(
                 parameter.Value,
                 new ValidationContext(parameter.Value),
                 validateAllProperties: true);
+            }
         }
 
         return meta.Proceed();

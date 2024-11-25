@@ -1,15 +1,21 @@
-using EerieLeap.Configuration;
 using EerieLeap.Tests.Functional.Infrastructure;
+using EerieLeap.Tests.Functional.Models;
 using EerieLeap.Types;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
 public class ReadingsControllerTests : FunctionalTestBase {
-    public ReadingsControllerTests(WebApplicationFactory<TestStartup> factory)
-        : base(factory) { }
+    private readonly ITestOutputHelper _output;
+
+    public ReadingsControllerTests(
+        WebApplicationFactory<Program> factory,
+        ITestOutputHelper output) : base(factory) {
+        _output = output;
+    }
 
     [Fact]
     public async Task GetReadings_ReturnsSuccessStatusCode() {
@@ -23,7 +29,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings() {
         // Arrange
-        var config1 = new SensorConfig {
+        var config1 = new SensorConfigRequest {
             Id = "physical_sensor_1",
             Name = "Physical Temperature Sensor 1",
             Type = SensorType.Temperature,
@@ -36,7 +42,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
             SamplingRateMs = 1000
         };
 
-        var config2 = new SensorConfig {
+        var config2 = new SensorConfigRequest {
             Id = "physical_sensor_2",
             Name = "Physical Temperature Sensor 2",
             Type = SensorType.Temperature,
@@ -50,7 +56,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
             ConversionExpression = "x + 10"
         };
 
-        await PostSensorConfigsWithDelay(new List<SensorConfig> { config1, config2 });
+        await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { config1, config2 });
 
         // Act
         var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
@@ -76,7 +82,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_WithVirtualSensor_ReturnsValidReadings() {
         // Arrange
-        var physicalConfig = new SensorConfig {
+        var physicalConfig = new SensorConfigRequest {
             Id = "physical_temp_1",
             Name = "Physical Temperature 1",
             Type = SensorType.Temperature,
@@ -89,7 +95,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
             SamplingRateMs = 1000
         };
 
-        var virtualConfig = new SensorConfig {
+        var virtualConfig = new SensorConfigRequest {
             Id = "virtual_avg_temp",
             Name = "Virtual Average Temperature",
             Type = SensorType.Virtual,
@@ -100,7 +106,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
             ConversionExpression = "{physical_temp_1} * 0.8" // Simple scaling of the physical sensor
         };
 
-        await PostSensorConfigsWithDelay(new List<SensorConfig> { physicalConfig, virtualConfig });
+        await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { physicalConfig, virtualConfig });
 
         // Act
         var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
@@ -125,9 +131,9 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_WithConfiguredSensors_ReturnsReadingsForAllSensors() {
         // Arrange
-        var configs = new List<SensorConfig>
+        var configs = new List<SensorConfigRequest>
         {
-            new SensorConfig
+            new SensorConfigRequest
             {
                 Id = "sensor1",
                 Name = "Test Sensor 1",
@@ -139,7 +145,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
                 MinValue = -40,
                 MaxValue = 125
             },
-            new SensorConfig
+            new SensorConfigRequest
             {
                 Id = "sensor2",
                 Name = "Test Sensor 2",
@@ -190,7 +196,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReading_WithConfiguredSensor_ReturnsValidReading() {
         // Arrange
-        var config = new SensorConfig {
+        var config = new SensorConfigRequest {
             Id = "test_sensor_1",
             Name = "Test Sensor 1",
             Type = SensorType.Temperature,
@@ -203,7 +209,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
             SamplingRateMs = 1000
         };
 
-        await PostSensorConfigsWithDelay(new List<SensorConfig> { config });
+        await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { config });
 
         // Act
         var response = await GetAsync<ReadingResult>($"api/v1/readings/{config.Id}");
@@ -227,7 +233,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReading_AfterSensorRemoved_ReturnsNotFound() {
         // Arrange
-        var sensorConfig = new SensorConfig {
+        var sensorConfig = new SensorConfigRequest {
             Id = "temp_sensor",
             Name = "Temperature Sensor",
             Type = SensorType.Temperature,
@@ -239,10 +245,10 @@ public class ReadingsControllerTests : FunctionalTestBase {
             MaxValue = 125
         };
 
-        await PostSensorConfigsWithDelay(new List<SensorConfig> { sensorConfig });
+        await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { sensorConfig });
 
         // Remove the sensor by updating with an empty list
-        await PostSensorConfigsWithDelay(new List<SensorConfig>());
+        await PostSensorConfigsWithDelay(new List<SensorConfigRequest>());
 
         // Act
         var response = await GetWithFullResponse($"api/v1/readings/{sensorConfig.Id}");

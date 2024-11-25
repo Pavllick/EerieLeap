@@ -2,17 +2,20 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Json;
 using Xunit;
 using EerieLeap.Configuration;
-using System.Device.Spi;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text;
+using System.Text.Json;
+using EerieLeap.Utilities;
+using EerieLeap.Tests.Functional.Models;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
 
-public class FunctionalTestBase : IClassFixture<WebApplicationFactory<TestStartup>>, IAsyncLifetime {
-    protected readonly WebApplicationFactory<TestStartup> Factory;
+public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime {
+    protected readonly WebApplicationFactory<Program> Factory;
     protected readonly HttpClient Client;
 
-    protected FunctionalTestBase(WebApplicationFactory<TestStartup> factory) {
+    protected FunctionalTestBase(WebApplicationFactory<Program> factory) {
         Factory = factory.WithWebHostBuilder(builder => {
             builder.ConfigureServices(services => {
                 services.AddLogging(logging => {
@@ -29,19 +32,15 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<TestStartu
 
     public async Task InitializeAsync() {
         // Set up initial ADC configuration
-        var adcConfig = new AdcConfig {
-            Type = "MCP3008",
-            BusId = 0,
-            ChipSelect = 0,
-            ReferenceVoltage = 3.3,
-            Resolution = 10,
-            ClockFrequency = 1_000_000,
-            Mode = SpiMode.Mode0,
-            DataBitLength = 8,
-            Protocol = new AdcProtocolConfig()
-        };
+        var adcConfig = AdcConfigRequest.CreateValid();
 
-        await PostAsync("api/v1/config/adc", adcConfig);
+        var json = JsonSerializer.Serialize(adcConfig);
+
+        var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
+        if (!response.IsSuccessStatusCode) {
+            var content = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Failed to initialize ADC config: {response.StatusCode} - {content}");
+        }
     }
 
     public Task DisposeAsync() =>
@@ -63,10 +62,21 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<TestStartu
         return response;
     }
 
-    protected async Task<HttpResponseMessage> PostWithFullResponse<T>(string url, T content) where T : class =>
+    protected async Task<HttpResponseMessage> PostWithFullResponse<T>(string url, T content) where T : class {
+        var json = JsonSerializer.Serialize(content);
+
+        return await Client.PostAsJsonAsync(url, content);
+    }
+
+    protected async Task<HttpResponseMessage> PostWithFullResponse(string url, object content) =>
         await Client.PostAsJsonAsync(url, content);
 
-    protected async Task PostSensorConfigsWithDelay(IEnumerable<SensorConfig> configs, int delayMs = 1000) {
+    protected async Task<HttpResponseMessage> PostWithFullResponse(string url, string jsonContent) {
+        using var stringContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+        return await Client.PostAsync(url, stringContent);
+    }
+
+    protected async Task PostSensorConfigsWithDelay(IEnumerable<SensorConfigRequest> configs, int delayMs = 1000) {
         var response = await PostAsync("api/v1/config/sensors", configs);
         response.EnsureSuccessStatusCode();
 

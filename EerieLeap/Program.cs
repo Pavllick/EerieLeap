@@ -9,14 +9,36 @@ using EerieLeap.Hardware;
 
 namespace EerieLeap;
 
-public static class Program {
+public class Program {
     public static void Main(string[] args) {
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
         builder.Services
-            .AddControllers(options => options.Filters.Add<ModelStateValidationFilter>())
-            .ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true);
+            .AddControllers(options => {
+                options.Filters.Add<ModelStateValidationFilter>();
+                // options.Filters.Add<ValidationExceptionFilter>();
+            })
+            .AddJsonOptions(options => {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.IncludeFields = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                options.JsonSerializerOptions.WriteIndented = true;
+
+                options.JsonSerializerOptions.Converters.Clear();
+
+                // Add validation converters for the current assembly
+                var converterFactory = new ValidationJsonConverterFactory(new ActionContextAccessor());
+                foreach (var converter in converterFactory.CreateConvertersForAssembly(typeof(Program).Assembly)) {
+                    options.JsonSerializerOptions.Converters.Add(converter);
+                }
+            })
+            .ConfigureApiBehaviorOptions(options => {
+                options.SuppressModelStateInvalidFilter = true;
+                options.SuppressInferBindingSourcesForParameters = true;
+                options.SuppressModelStateInvalidFilter = true;
+                options.SuppressMapClientErrors = true;
+            });
 
         // Register services
         builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
@@ -29,14 +51,6 @@ public static class Program {
         builder.Services.AddSingleton<ISensorReadingService>(sp => sp.GetRequiredService<SensorReadingService>());
         builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<SensorReadingService>());
 
-        // Configure base JSON options
-        builder.Services.Configure<JsonOptions>(options => {
-            options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-            options.JsonSerializerOptions.IncludeFields = true;
-            options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-            options.JsonSerializerOptions.WriteIndented = true;
-        });
-
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
@@ -48,15 +62,6 @@ public static class Program {
         });
 
         var app = builder.Build();
-
-        // Configure JSON converters after app is built
-        var jsonOptions = app.Services.GetRequiredService<IOptions<JsonOptions>>().Value;
-        var converterFactory = app.Services.GetRequiredService<ValidationJsonConverterFactory>();
-
-        // Add converters for all types that need validation in our assembly
-        var assembly = typeof(Program).Assembly;
-        foreach (var converter in converterFactory.CreateConvertersForAssembly(assembly))
-            jsonOptions.JsonSerializerOptions.Converters.Add(converter);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment()) {

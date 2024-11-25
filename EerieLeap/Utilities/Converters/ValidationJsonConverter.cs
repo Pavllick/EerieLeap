@@ -4,7 +4,6 @@ using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
 
 namespace EerieLeap.Utilities.Converters;
 
@@ -19,22 +18,13 @@ public class ValidationJsonConverterFactory {
 
         var typesToValidate = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic)
-            .Where(IsController);
+            .Where(t => t.Namespace == "EerieLeap.Configuration");
 
         return typesToValidate.Select(type => {
             var converterType = typeof(ValidationJsonConverter<>).MakeGenericType(type);
             return (JsonConverter)Activator.CreateInstance(converterType, _actionContextAccessor)!;
         });
     }
-
-    private static bool IsController(Type type) =>
-        type.IsPublic &&
-        !type.IsAbstract &&
-        (type.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase) ||
-         type.GetCustomAttributes<ControllerAttribute>(true).Any() ||
-         type.GetCustomAttributes<ApiControllerAttribute>(true).Any()) &&
-        (typeof(ControllerBase).IsAssignableFrom(type) ||
-         typeof(Controller).IsAssignableFrom(type));
 }
 
 /// <summary>
@@ -50,53 +40,35 @@ public class ValidationJsonConverter<T> : JsonConverter<T> where T : class {
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         ArgumentNullException.ThrowIfNull(typeToConvert);
 
-        var deserializedValue = JsonSerializer.Deserialize<T>(ref reader, GetSanitizedOptions(options));
+        Console.WriteLine($"Deserializing {typeToConvert.Name}");
 
-        if (deserializedValue == null)
-            return null;
+        using var document = JsonDocument.ParseValue(ref reader);
+        var root = document.RootElement;
 
-        var constructor = typeToConvert
-            .GetConstructors()
-            .FirstOrDefault(c => c.GetParameters().Length > 0);
-
-        var modelState = _actionContextAccessor.ActionContext?.ModelState ?? new ModelStateDictionary();
-        T? result = null;
-
-        if (constructor != null) {
-            var constructorParams = constructor.GetParameters();
-            var paramValues = constructorParams
-                .Where(p => p.Name != null)
-                .Select(param => deserializedValue.GetType().GetProperty(param.Name!)?.GetValue(deserializedValue))
-                .ToArray();
-
-            try {
-                result = (T?)constructor.Invoke(paramValues);
-            } catch (TargetInvocationException ex) {
-                if (ex.InnerException is ValidationException validationEx) {
-                    var failedParam = constructorParams
-                        .FirstOrDefault(p => validationEx.Message.Contains(p.Name!, StringComparison.Ordinal))?.Name ?? "";
-                    modelState.AddModelError(failedParam, validationEx.Message);
-                } else {
-                    throw;
-                }
-            }
-        }
-
-        result ??= Activator.CreateInstance<T>();
+        var result = CreateInstance(root, typeToConvert, options);
         ArgumentNullException.ThrowIfNull(result);
 
-        foreach (var property in typeToConvert.GetProperties()) {
-            if (property.CanWrite) {
-                var sourceValue = deserializedValue.GetType().GetProperty(property.Name)?.GetValue(deserializedValue);
+        var modelState = _actionContextAccessor.ActionContext?.ModelState ?? new ModelStateDictionary();
 
-                try {
-                    property.SetValue(result, sourceValue);
-                } catch (TargetInvocationException ex) {
-                    if (ex.InnerException is ValidationException validationEx) {
-                        modelState.AddModelError(property.Name, validationEx.Message);
-                    } else {
-                        throw;
-                    }
+        foreach (var property in typeToConvert.GetProperties()) {
+            if (!property.CanWrite)
+                continue;
+
+            try {
+                if (TryGetPropertyCaseInsensitive(root, property.Name, out var element)) {
+                    var value = element.ValueKind == JsonValueKind.Null ?
+                        null :
+                        JsonSerializer.Deserialize(element.GetRawText(), property.PropertyType, options);
+
+                    property.SetValue(result, value);
+                } else {
+                    property.SetValue(result, default);
+                }
+            } catch (TargetInvocationException ex) when (ex.InnerException is ArgumentException or InvalidOperationException or ValidationException) {
+                if (ex.InnerException is ValidationException validationEx) {
+                    modelState.AddModelError(property.Name, validationEx.Message);
+                } else {
+                    throw;
                 }
             }
         }
@@ -106,6 +78,56 @@ public class ValidationJsonConverter<T> : JsonConverter<T> where T : class {
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
         JsonSerializer.Serialize(writer, value, GetSanitizedOptions(options));
+
+    private static T? CreateInstance(JsonElement root, Type typeToConvert, JsonSerializerOptions options) {
+        var constructors = typeToConvert.GetConstructors()
+            .OrderByDescending(c => c.GetParameters().Length);
+
+        foreach (var constructor in constructors) {
+            var parameters = constructor.GetParameters();
+            if (parameters.Length == 0)
+                continue;
+
+            var args = new object?[parameters.Length];
+            var allParamsFound = true;
+
+            for (var i = 0; i < parameters.Length; i++) {
+                var param = parameters[i];
+                if (!TryGetPropertyCaseInsensitive(root, param.Name!, out var element)) {
+                    allParamsFound = false;
+                    break;
+                }
+
+                args[i] = element.ValueKind == JsonValueKind.Null
+                    ? null
+                    : JsonSerializer.Deserialize(element.GetRawText(), param.ParameterType, options);
+            }
+
+            if (allParamsFound) {
+                try {
+                    return (T?)constructor.Invoke(args);
+                } catch (TargetInvocationException ex) when (ex.InnerException is ArgumentException or InvalidOperationException or ValidationException) {
+                    // Skip this constructor if it fails validation or argument checks
+                    continue;
+                }
+            }
+        }
+
+        return Activator.CreateInstance<T>();
+    }
+
+    private static bool TryGetPropertyCaseInsensitive(JsonElement element, string propertyName, out JsonElement value) {
+        foreach (var property in element.EnumerateObject()) {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)) {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+
+        return false;
+    }
 
     private static JsonSerializerOptions GetSanitizedOptions(JsonSerializerOptions options) {
         var sanitizedOptions = new JsonSerializerOptions(options);
