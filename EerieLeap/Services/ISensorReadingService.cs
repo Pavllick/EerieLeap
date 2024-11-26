@@ -6,8 +6,7 @@ namespace EerieLeap.Services;
 public interface ISensorReadingService {
     Task<IEnumerable<ReadingResult>> GetReadingsAsync();
     Task<ReadingResult?> GetReadingAsync(string id);
-    Task<AdcConfig> GetAdcConfigurationAsync();
     Task<IEnumerable<SensorConfig>> GetSensorConfigurationsAsync();
-    Task UpdateAdcConfigurationAsync(AdcConfig config);
-    Task UpdateSensorConfigurationsAsync(IEnumerable<SensorConfig> configs);
+    Task UpdateConfigurationAsync(IEnumerable<SensorConfig> configs);
+    Task WaitForInitializationAsync();
 }

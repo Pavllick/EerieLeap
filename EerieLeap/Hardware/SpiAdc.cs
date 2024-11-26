@@ -82,7 +82,7 @@ public partial class SpiAdc : IAdc, IDisposable {
     private void LogReading(int channel, int rawValue, double voltage) =>
         LogChannelReading(channel, rawValue, voltage);
 
-    private void Dispose(bool disposing) {
+    protected virtual void Dispose(bool disposing) {
         if (_isDisposed)
             return;
 

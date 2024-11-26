@@ -5,9 +5,7 @@ using EerieLeap.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
 using System.Device.Spi;
-using System.IO;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -19,8 +17,10 @@ public class SensorReadingServiceTests : IDisposable {
     private readonly Mock<ILogger> _mockLogger;
     private readonly Mock<ILogger> _mockAdcFactoryLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IAdcConfigurationService> _mockAdcService;
     private readonly SensorReadingService _service;
     private readonly string _testDir;
+    private readonly MockAdc _mockAdc;
     private bool _disposed;
 
     public SensorReadingServiceTests() {
@@ -39,20 +39,27 @@ public class SensorReadingServiceTests : IDisposable {
         _mockAdcFactoryLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
         _mockConfiguration = new Mock<IConfiguration>();
+        _mockAdcService = new Mock<IAdcConfigurationService>();
 
         var configSection = new Mock<IConfigurationSection>();
         configSection.Setup(x => x.Value).Returns(_testConfigPath);
-        _mockConfiguration.Setup(x => x.GetSection("ConfigurationPath")).Returns(configSection.Object);
+        configSection.Setup(x => x.Path).Returns("ConfigurationPath");
         configSection.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
+        _mockConfiguration.Setup(x => x.GetSection("ConfigurationPath")).Returns(configSection.Object);
+        _mockConfiguration.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
 
-        var adcFactory = new AdcFactory(_mockAdcFactoryLogger.Object);
-        _service = new SensorReadingService(_mockLogger.Object, adcFactory, _mockConfiguration.Object);
+        _mockAdc = new MockAdc();
+        _mockAdcService.Setup(x => x.GetAdcAsync())
+            .ReturnsAsync(_mockAdc);
+
+        _service = new SensorReadingService(_mockLogger.Object, _mockAdcService.Object, _mockConfiguration.Object);
     }
 
     protected virtual void Dispose(bool disposing) {
         if (!_disposed) {
             if (disposing) {
                 _service?.Dispose();
+                _mockAdc?.Dispose();
             }
             if (Directory.Exists(_testDir)) {
                 Directory.Delete(_testDir, true);
@@ -87,22 +94,27 @@ public class SensorReadingServiceTests : IDisposable {
             ChipSelect = 0,
             ClockFrequency = 1000000,
             Mode = SpiMode.Mode0,
-            DataBitLength = 8
+            DataBitLength = 8,
+            Resolution = 10, // 10-bit ADC
+            ReferenceVoltage = 3.3, // Reference voltage in volts
+            Protocol = new AdcProtocolConfig {
+                CommandPrefix = Convert.FromHexString("40"),
+                ChannelBitShift = 2,
+                ChannelMask = 15,
+                ResultBitMask = 1023, // 10-bit mask
+                ResultBitShift = 0,
+                ReadByteCount = 2
+            }
         };
 
-        var combinedConfig = new CombinedConfig {
-            SensorConfigs = new List<SensorConfig> { sensorConfig },
-            AdcConfig = adcConfig
-        };
-
-        var adcJsonPath = Path.Combine(_testConfigPath, "adc.json");
         var sensorsJsonPath = Path.Combine(_testConfigPath, "sensors.json");
-
-        await File.WriteAllTextAsync(adcJsonPath, JsonSerializer.Serialize(adcConfig));
         await File.WriteAllTextAsync(sensorsJsonPath, JsonSerializer.Serialize(new List<SensorConfig> { sensorConfig }));
+
+        _mockAdc.Configure(adcConfig);
 
         // Act
         await _service.StartAsync(CancellationToken.None);
+        await _service.WaitForInitializationAsync();
 
         // Assert
         // Service should start without throwing exceptions
@@ -111,7 +123,7 @@ public class SensorReadingServiceTests : IDisposable {
                 LogLevel.Error,
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception?>(),
+                It.IsAny<Exception>(),
                 (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
             Times.Never);
     }
@@ -131,13 +143,13 @@ public class SensorReadingServiceTests : IDisposable {
         var ex = await Assert.ThrowsAsync<JsonException>(() =>
             _service.WaitForInitializationAsync());
 
-        Assert.Contains("invalid start of a property", ex.Message.ToLowerInvariant());
+        Assert.Contains("json value could not be converted", ex.Message.ToLowerInvariant());
 
         _mockLogger.Verify(
             x => x.Log(
             LogLevel.Error,
-            It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to load configurations")),
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to load")),
                 It.Is<Exception>(ex => ex is JsonException),
                 (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
             Times.Once);

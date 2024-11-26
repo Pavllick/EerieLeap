@@ -21,11 +21,9 @@ public sealed class Program {
         // Register services
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<AdcFactory>();
-
-        // Register SensorReadingService as both ISensorReadingService and IHostedService
-        builder.Services.AddSingleton<SensorReadingService>();
-        builder.Services.AddSingleton<ISensorReadingService>(sp => sp.GetRequiredService<SensorReadingService>());
-        builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<SensorReadingService>());
+        builder.Services.AddSingleton<IAdcConfigurationService, AdcConfigurationService>();
+        builder.Services.AddSingleton<ISensorReadingService, SensorReadingService>();
+        builder.Services.AddHostedService(sp => (SensorReadingService)sp.GetRequiredService<ISensorReadingService>());
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
