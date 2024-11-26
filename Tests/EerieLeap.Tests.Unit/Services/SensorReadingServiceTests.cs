@@ -5,7 +5,10 @@ using EerieLeap.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
 using System.Device.Spi;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using Xunit;
 
@@ -120,15 +123,15 @@ public class SensorReadingServiceTests : IDisposable {
         var adcJsonPath = Path.Combine(_testConfigPath, "adc.json");
         var sensorsJsonPath = Path.Combine(_testConfigPath, "sensors.json");
 
-        await File.WriteAllTextAsync(adcJsonPath, invalidJson);
-        await File.WriteAllTextAsync(sensorsJsonPath, invalidJson);
+        await File.WriteAllTextAsync(adcJsonPath, invalidJson, new UTF8Encoding(false));  // No BOM
+        await File.WriteAllTextAsync(sensorsJsonPath, invalidJson, new UTF8Encoding(false));  // No BOM
 
         // Act & Assert
         await _service.StartAsync(CancellationToken.None);
         var ex = await Assert.ThrowsAsync<JsonException>(() =>
             _service.WaitForInitializationAsync());
 
-        Assert.Contains("invalid start of a property", ex.Message);
+        Assert.Contains("invalid start of a property", ex.Message.ToLowerInvariant());
 
         _mockLogger.Verify(
             x => x.Log(
