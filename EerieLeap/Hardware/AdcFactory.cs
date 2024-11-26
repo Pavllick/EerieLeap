@@ -1,6 +1,6 @@
 namespace EerieLeap.Hardware;
 
-public sealed partial class AdcFactory : IAdcFactory {
+public sealed partial class AdcFactory {
     private readonly ILogger _logger;
     private readonly bool _isDevelopment;
 
@@ -12,12 +12,13 @@ public sealed partial class AdcFactory : IAdcFactory {
     public IAdc CreateAdc() {
         if (_isDevelopment) {
             LogUsingMockAdc();
+
             return new MockAdc();
         }
 
         LogCreatingAdc();
 
-        return new Adc(_logger);
+        return new SpiAdc(_logger);
     }
 
     #region Loggers

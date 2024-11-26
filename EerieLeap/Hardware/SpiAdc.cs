@@ -7,13 +7,13 @@ namespace EerieLeap.Hardware;
 /// <summary>
 /// Base class for SPI-based ADC implementations
 /// </summary>
-public abstract partial class SpiAdc : IAdc, IDisposable {
+public partial class SpiAdc : IAdc, IDisposable {
     private readonly ILogger _logger;
     private SpiDevice? _spiDevice;
     private AdcConfig? _config;
     private bool _isDisposed;
 
-    protected SpiAdc(ILogger logger) =>
+    public SpiAdc(ILogger logger) =>
         _logger = logger;
 
     public void Configure([Required] AdcConfig config) {
@@ -42,9 +42,15 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
             config.Protocol.ReadByteCount!.Value);
     }
 
-    public abstract Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default);
+    public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) =>
+        await Task.Run(() => {
+            var (_, rawValue) = TransferSpi(channel);
+            var voltage = ConvertToVoltage(rawValue);
+            LogReading(channel, rawValue, voltage);
+            return voltage;
+        }, cancellationToken).ConfigureAwait(false);
 
-    protected (byte[] readBuffer, int rawValue) TransferSpi(int channel) {
+    private (byte[] readBuffer, int rawValue) TransferSpi(int channel) {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         if (_spiDevice == null || _config == null)
@@ -68,15 +74,15 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
         return (readBuffer, rawValue);
     }
 
-    protected double ConvertToVoltage(int rawValue) =>
+    private double ConvertToVoltage(int rawValue) =>
         _config == null
             ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
             : (rawValue * _config.ReferenceVoltage!.Value) / ((1 << _config.Resolution!.Value) - 1);
 
-    protected void LogReading(int channel, int rawValue, double voltage) =>
+    private void LogReading(int channel, int rawValue, double voltage) =>
         LogChannelReading(channel, rawValue, voltage);
 
-    protected virtual void Dispose(bool disposing) {
+    private void Dispose(bool disposing) {
         if (_isDisposed)
             return;
 

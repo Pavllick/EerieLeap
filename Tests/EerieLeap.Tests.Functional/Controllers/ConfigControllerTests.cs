@@ -268,7 +268,7 @@ public class ConfigControllerTests : FunctionalTestBase {
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("duplicate", content.ToLower());
+        Assert.Contains("duplicate", content.ToLowerInvariant());
     }
 
     [Fact]
