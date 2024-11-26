@@ -17,14 +17,14 @@ public sealed class GlobalValidationFabric : ProjectFabric {
 
         // Add validation to all methods that have parameters with validation attributes
         amender
-            .SelectMany(compilation => compilation.Types)
-            .SelectMany(type => type.Methods)
+            .SelectMany(compilation => compilation.AllTypes)
+            .SelectMany(type => type.AllMethods)
             .Where(method => method.Parameters.Any(p => p.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute)))))
             .AddAspect(target => new MethodValidationAspect());
 
         // Add validation to all fields and properties with validation attributes
         amender
-            .SelectMany(compilation => compilation.Types)
+            .SelectMany(compilation => compilation.AllTypes)
             .SelectMany(type => type.FieldsAndProperties)
             // .Where(prop => prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))
             // Need to exclude EerieLeap.Configuration namespace because API validation is handled separately

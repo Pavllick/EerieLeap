@@ -11,11 +11,8 @@ public sealed class MockAdc : IAdc {
     private readonly Dictionary<int, double> _lastValues = new();
     private readonly Dictionary<int, double> _trends = new();
 
-    public void Configure([Required] AdcConfig config) {
-        var v = config.Type;
-
+    public void Configure([Required] AdcConfig config) =>
         _config = config;
-    }
 
     public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
