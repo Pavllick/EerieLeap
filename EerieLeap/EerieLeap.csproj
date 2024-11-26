@@ -7,6 +7,7 @@
     <AnalysisMode>All</AnalysisMode>
     <UserSecretsId>dotnet-EerieLeap-a6b9a352-89bf-4dee-8bc7-ce2c6af99db3</UserSecretsId>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <MetalamaEmitCompilerTransformedFiles>true</MetalamaEmitCompilerTransformedFiles>
   </PropertyGroup>
 
   <ItemGroup>

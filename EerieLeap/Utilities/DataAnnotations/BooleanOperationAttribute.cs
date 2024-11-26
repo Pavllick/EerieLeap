@@ -7,8 +7,6 @@ namespace EerieLeap.Utilities.DataAnnotations;
 public abstract class BooleanOperationAttribute : ValidationAttribute {
     protected BooleanOperationAttribute(BooleanOperation booleanOperation, [Required] object operandValue)
         : base("{0} must be {1} {2}.") {
-        // TODO: Required attribute is ignored here for some reason
-        ArgumentNullException.ThrowIfNull(operandValue);
 
         if ((int)booleanOperation <= (int)BooleanOperation.Null)
             throw new ArgumentException("Invalid boolean operation", nameof(booleanOperation));
