@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -35,9 +36,7 @@ public sealed class HexByteArrayConverter : JsonConverter<byte[]?> {
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options) {
-        ArgumentNullException.ThrowIfNull(writer);
-
+    public override void Write([Required] Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options) {
         if (value == null) {
             writer.WriteNullValue();
             return;

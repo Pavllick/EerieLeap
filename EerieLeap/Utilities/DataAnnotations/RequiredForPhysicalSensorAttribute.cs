@@ -9,12 +9,8 @@ namespace EerieLeap.Utilities.DataAnnotations;
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class RequiredForPhysicalSensorAttribute : ValidationAttribute {
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) {
-        ArgumentNullException.ThrowIfNull(validationContext);
-
-        var sensorConfig = validationContext.ObjectInstance as SensorConfig;
-
-        if (sensorConfig == null)
+    protected override ValidationResult? IsValid(object? value, [Required] ValidationContext validationContext) {
+        if (validationContext.ObjectInstance is not SensorConfig sensorConfig)
             return new ValidationResult("This attribute can only be used on SensorConfig properties",
                 new[] { validationContext.MemberName ?? string.Empty });
 

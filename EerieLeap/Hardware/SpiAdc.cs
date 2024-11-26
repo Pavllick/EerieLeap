@@ -1,9 +1,5 @@
-using System;
-using System.Buffers;
+using System.ComponentModel.DataAnnotations;
 using System.Device.Spi;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using EerieLeap.Configuration;
 
 namespace EerieLeap.Hardware;
@@ -17,17 +13,14 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
     private AdcConfig? _config;
     private bool _isDisposed;
 
-    protected SpiAdc(ILogger logger) {
+    protected SpiAdc(ILogger logger) =>
         _logger = logger;
-    }
 
-    public void Configure(AdcConfig config) {
-        ArgumentNullException.ThrowIfNull(config);
-
-        var settings = new SpiConnectionSettings(config.BusId, config.ChipSelect) {
-            ClockFrequency = config.ClockFrequency,
-            Mode = config.Mode,
-            DataBitLength = config.DataBitLength
+    public void Configure([Required] AdcConfig config) {
+        var settings = new SpiConnectionSettings(config.BusId!.Value, config.ChipSelect!.Value) {
+            ClockFrequency = config.ClockFrequency!.Value,
+            Mode = config.Mode!.Value,
+            DataBitLength = config.DataBitLength!.Value
         };
 
         _spiDevice?.Dispose();
@@ -35,18 +28,18 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
         _config = config;
 
         LogConfiguration(
-            config.Type,
-            config.BusId,
-            config.ChipSelect,
-            config.ClockFrequency,
-            (int)config.Mode,
-            config.Resolution);
+            config.Type!,
+            config.BusId!.Value,
+            config.ChipSelect!.Value,
+            config.ClockFrequency!.Value,
+            (int)config.Mode!.Value,
+            config.Resolution!.Value);
 
         LogProtocol(
-            BitConverter.ToString(config.Protocol.CommandPrefix),
-            Convert.ToString(config.Protocol.ChannelMask, 2).PadLeft(8, '0'),
-            Convert.ToString(config.Protocol.ResultBitMask, 2),
-            config.Protocol.ReadByteCount);
+            BitConverter.ToString(config.Protocol!.CommandPrefix!),
+            Convert.ToString(config.Protocol.ChannelMask!.Value, 2).PadLeft(8, '0'),
+            Convert.ToString(config.Protocol.ResultBitMask!.Value, 2),
+            config.Protocol.ReadByteCount!.Value);
     }
 
     public abstract Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default);
@@ -58,11 +51,11 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
             throw new InvalidOperationException("ADC not configured. Call Configure first.");
 
         // Prepare command bytes using the protocol configuration
-        byte commandByte = (byte)(_config.Protocol.CommandPrefix.FirstOrDefault() |
-            ((channel & _config.Protocol.ChannelMask) << _config.Protocol.ChannelBitShift));
+        var commandByte = (byte)(_config.Protocol!.CommandPrefix!.FirstOrDefault() |
+            ((channel & _config.Protocol!.ChannelMask!.Value) << _config.Protocol!.ChannelBitShift!.Value));
 
-        byte[] writeBuffer = new[] { commandByte };
-        byte[] readBuffer = new byte[_config.Protocol.ReadByteCount];
+        var writeBuffer = new[] { commandByte };
+        var readBuffer = new byte[_config.Protocol!.ReadByteCount!.Value];
 
         _spiDevice.TransferFullDuplex(writeBuffer, readBuffer);
 
@@ -71,20 +64,17 @@ public abstract partial class SpiAdc : IAdc, IDisposable {
         for (int i = 0; i < readBuffer.Length; i++)
             rawValue = (rawValue << 8) | readBuffer[i];
 
-        rawValue = (rawValue >> _config.Protocol.ResultBitShift) & _config.Protocol.ResultBitMask;
+        rawValue = (rawValue >> _config.Protocol!.ResultBitShift!.Value) & _config.Protocol!.ResultBitMask!.Value;
         return (readBuffer, rawValue);
     }
 
-    protected double ConvertToVoltage(int rawValue) {
-        if (_config == null)
-            throw new InvalidOperationException("ADC not configured. Call Configure first.");
+    protected double ConvertToVoltage(int rawValue) =>
+        _config == null
+            ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
+            : (rawValue * _config.ReferenceVoltage!.Value) / ((1 << _config.Resolution!.Value) - 1);
 
-        return (rawValue * _config.ReferenceVoltage) / ((1 << _config.Resolution) - 1);
-    }
-
-    protected void LogReading(int channel, int rawValue, double voltage) {
+    protected void LogReading(int channel, int rawValue, double voltage) =>
         LogChannelReading(channel, rawValue, voltage);
-    }
 
     protected virtual void Dispose(bool disposing) {
         if (_isDisposed)

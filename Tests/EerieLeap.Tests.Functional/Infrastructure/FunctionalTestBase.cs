@@ -19,11 +19,11 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>,
         Factory = factory.WithWebHostBuilder(builder => {
             builder.ConfigureServices(services => {
                 services.AddLogging(logging => {
-                    // logging.ClearProviders();
-                    // logging.AddFilter((category, level) =>
-                    //     level >= LogLevel.Error);
-                    logging.AddDebug();
-                    logging.SetMinimumLevel(LogLevel.Debug);
+                    logging.ClearProviders();
+                    logging.AddFilter((category, level) =>
+                        level >= LogLevel.Error);
+                    // logging.AddDebug();
+                    // logging.SetMinimumLevel(LogLevel.Debug);
                 });
             });
         });
@@ -33,8 +33,6 @@ public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>,
     public async Task InitializeAsync() {
         // Set up initial ADC configuration
         var adcConfig = AdcConfigRequest.CreateValid();
-
-        var json = JsonSerializer.Serialize(adcConfig);
 
         var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
         if (!response.IsSuccessStatusCode) {

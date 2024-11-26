@@ -5,29 +5,30 @@ namespace EerieLeap.Configuration;
 
 public class AdcConfig {
     [Required]
-    public string Type { get; set; } = string.Empty;
+    [MinLength(1)]
+    public string? Type { get; set; }
 
     [Required]
-    public int BusId { get; set; }
+    public int? BusId { get; set; }
 
     [Required]
-    public int ChipSelect { get; set; }
+    public int? ChipSelect { get; set; }
 
     [Required]
-    public int ClockFrequency { get; set; } = 1_000_000; // Default to 1MHz
+    public int? ClockFrequency { get; set; }
 
     [Required]
-    public SpiMode Mode { get; set; } = SpiMode.Mode0;
+    public SpiMode? Mode { get; set; }
 
     [Required]
-    public int DataBitLength { get; set; } = 8;
+    public int? DataBitLength { get; set; }
 
     [Required]
-    public int Resolution { get; set; } = 10; // Default to 10-bit resolution
+    public int? Resolution { get; set; }
 
     [Required]
-    public double ReferenceVoltage { get; set; } = 3.3; // Default to 3.3V
+    public double? ReferenceVoltage { get; set; }
 
     [Required]
-    public AdcProtocolConfig Protocol { get; set; } = new();
+    public AdcProtocolConfig? Protocol { get; set; }
 }

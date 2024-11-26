@@ -4,15 +4,11 @@ using System.Globalization;
 namespace EerieLeap.Utilities.DataAnnotations;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public abstract class BooleanOperationAttribute : ValidationAttribute
-{
-    protected BooleanOperationAttribute(BooleanOperation booleanOperation, object operandValue)
-        : base("{0} must be {1} {2}.")
-    {
+public abstract class BooleanOperationAttribute : ValidationAttribute {
+    protected BooleanOperationAttribute(BooleanOperation booleanOperation, [Required] object operandValue)
+        : base("{0} must be {1} {2}.") {
         if ((int)booleanOperation <= (int)BooleanOperation.Null)
             throw new ArgumentException("Invalid boolean operation", nameof(booleanOperation));
-        
-        ArgumentNullException.ThrowIfNull(operandValue);
 
         BooleanOperation = booleanOperation;
         OperandValue = operandValue;

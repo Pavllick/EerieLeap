@@ -1,4 +1,5 @@
 using EerieLeap.Configuration;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 
 namespace EerieLeap.Hardware;
@@ -10,8 +11,9 @@ public sealed class MockAdc : IAdc {
     private readonly Dictionary<int, double> _lastValues = new();
     private readonly Dictionary<int, double> _trends = new();
 
-    public void Configure(AdcConfig config) {
-        ArgumentNullException.ThrowIfNull(config);
+    public void Configure([Required] AdcConfig config) {
+        var v = config.Type;
+
         _config = config;
     }
 

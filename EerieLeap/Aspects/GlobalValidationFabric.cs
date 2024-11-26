@@ -3,8 +3,7 @@ using Metalama.Framework.Code;
 using Metalama.Framework.Fabrics;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using Metalama.Framework.Code.DeclarationBuilders;
-using Metalama.Framework.Advising;
+using Metalama.Framework.Diagnostics;
 
 namespace EerieLeap.Aspects;
 
@@ -27,37 +26,49 @@ public sealed class GlobalValidationFabric : ProjectFabric {
         amender
             .SelectMany(compilation => compilation.Types)
             .SelectMany(type => type.FieldsAndProperties)
-            .Where(prop => prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))
+            // .Where(prop => prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))
+            // Need to exclude EerieLeap.Configuration namespace because API validation is handled separately
+            .Where(prop =>
+                prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))) &&
+                !prop.DeclaringType.ContainingNamespace.FullName.StartsWith("EerieLeap.Configuration", StringComparison.OrdinalIgnoreCase))
             .AddAspect(target => new FieldOrPropertyValidationAspect(target));
     }
 }
 
 [CompileTime]
 public sealed class MethodValidationAspect : OverrideMethodAspect {
-    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
+    // Suppress "CA1062:Validate arguments of public methods"
+    private static readonly SuppressionDefinition _validateArgumentsOfPublicMethodsError = new("CA1062");
+
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The builder parameter is provided by the Metalama framework and is never null")]
     public override void BuildAspect(IAspectBuilder<IMethod> builder) {
-        var attribute = AttributeConstruction.Create(
-            typeof(SuppressMessageAttribute),
-            [
-                "Design",
-                "CA1062:Validate arguments of public methods"
-            ],
-            [
-                new KeyValuePair<string, object?>("Justification", "Parameter validation is handled by MethodValidationAspect")
-            ]);
-
-        builder.With(builder.Target).IntroduceAttribute(attribute);
-
         base.BuildAspect(builder);
+
+        foreach (var parameter in builder.Target.Parameters) {
+            if (parameter.Attributes.All(a => a.Type.Is(typeof(RequiredAttribute))))
+                builder.Diagnostics.Suppress(_validateArgumentsOfPublicMethodsError);
+        }
     }
 
     public override dynamic? OverrideMethod() {
-        foreach (var parameter in meta.Target.Parameters) {
+        foreach (var parameter in meta.Target.Parameters.Where(p => p.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))) {
+            var isRequired = parameter.Attributes.Any(a => a.Type.Is(typeof(RequiredAttribute)));
+
+            // if (isRequired)
+            //     meta.InsertStatement($"ArgumentNullException.ThrowIfNull({parameter.Name});");
+
+            if (isRequired) {
+                if (isRequired && parameter.Value == null)
+                    throw new ArgumentNullException(parameter.Name);
+            }
+
             if (parameter.Value != null) {
                 Validator.ValidateObject(
-                parameter.Value,
-                new ValidationContext(parameter.Value),
-                validateAllProperties: true);
+                    parameter.Value,
+                    new ValidationContext(parameter.Value) {
+                        MemberName = parameter.Name
+                    },
+                    validateAllProperties: true);
             }
         }
 
@@ -84,11 +95,16 @@ public sealed class FieldOrPropertyValidationAspect : OverrideFieldOrPropertyAsp
     public override dynamic? OverrideProperty {
         get => meta.Proceed();
         set {
-            Validator.ValidateProperty(
-                value,
-                new ValidationContext(meta.This) {
-                    MemberName = Property.Name
-                });
+            if (_isRequired && value == null)
+                throw new ArgumentNullException(Property.Name);
+
+            if (value != null) {
+                Validator.ValidateProperty(
+                    value,
+                    new ValidationContext(meta.This) {
+                        MemberName = Property.Name
+                    });
+            }
 
             meta.Proceed();
         }

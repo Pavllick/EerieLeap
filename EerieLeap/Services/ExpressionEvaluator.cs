@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace EerieLeap.Services;
 
 public static class ExpressionEvaluator {
-    private static readonly Regex SensorIdRegex = new(@"\{([a-z_][a-z0-9_]*)\}", RegexOptions.Compiled);
+    private static readonly Regex _sensorIdRegex = new(@"\{([a-z_][a-z0-9_]*)\}", RegexOptions.Compiled);
 
     private static void AddMathConstants(Expression expr) {
         expr.Parameters["PI"] = Math.PI;
@@ -39,7 +39,7 @@ public static class ExpressionEvaluator {
     }
 
     public static HashSet<string> ExtractSensorIds(string expression) {
-        var matches = SensorIdRegex.Matches(expression);
+        var matches = _sensorIdRegex.Matches(expression);
         var sensorIds = new HashSet<string>();
 
         // Group[1] contains the sensor ID without curly braces
@@ -50,5 +50,5 @@ public static class ExpressionEvaluator {
     }
 
     private static string UnwrapVariables(string expression) =>
-        SensorIdRegex.Replace(expression, "${1}");
+        _sensorIdRegex.Replace(expression, "${1}");
 }

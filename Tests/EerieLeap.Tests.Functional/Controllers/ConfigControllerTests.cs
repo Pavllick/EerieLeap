@@ -71,10 +71,31 @@ public class ConfigControllerTests : FunctionalTestBase {
     }
 
     [Fact]
-    public async Task UpdateAdcConfig_WithInvalidAdcConfig_ReturnsBadRequest() {
+    public async Task UpdateAdcConfig_WithInvalidJsonAdcConfig_ReturnsBadRequest() {
+        // Arrange
+        var jsonContent = @"{
+            ""ChipSelect"": 0,
+            ""Resolution"": 12
+        }";
+
+        // Act
+        var response = await PostWithFullResponse("api/v1/config/adc", jsonContent);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Type", content, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BusId", content, StringComparison.OrdinalIgnoreCase);
+
+        // Turns out validation list can contain "config" property,
+        // which is a parameter name in the controller POST method
+        Assert.DoesNotContain("config", content, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task UpdateAdcConfig_WithInvalidObjectAdcConfig_ReturnsBadRequest() {
         // Arrange
         var request = new AdcConfigRequest {
-            // Type field intentionally omitted
             ChipSelect = 0,
             Resolution = 12
         };
@@ -85,7 +106,12 @@ public class ConfigControllerTests : FunctionalTestBase {
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Type", content);
+        Assert.Contains("Type", content, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BusId", content, StringComparison.OrdinalIgnoreCase);
+
+        // Turns out validation list can contain "config" property,
+        // which is a parameter name in the controller POST method
+        Assert.DoesNotContain("config", content, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -197,6 +223,18 @@ public class ConfigControllerTests : FunctionalTestBase {
             SamplingRateMs = 1000
         };
 
+        // Act
+        var response = await PostWithFullResponse("api/v1/config/sensors", new List<SensorConfigRequest> { request });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Name", content);
+    }
+
+    [Fact]
+    public async Task UpdateSensorConfigs_WithInvalidConfigWithJson_ReturnsBadRequest() {
+        // Arrange
         var jsonContent = @"[{
             ""id"": ""invalid_sensor"",
             ""type"": ""Temperature"",
@@ -210,7 +248,7 @@ public class ConfigControllerTests : FunctionalTestBase {
         }]";
 
         // Act
-        var response = await PostWithFullResponse("api/v1/config/sensors", new List<SensorConfigRequest> { request });
+        var response = await PostWithFullResponse("api/v1/config/sensors", jsonContent);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

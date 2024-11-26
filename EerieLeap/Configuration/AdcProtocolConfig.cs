@@ -8,22 +8,22 @@ public class AdcProtocolConfig {
     [Required]
     [JsonConverter(typeof(HexByteArrayConverter))]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "Irrelevant for configuration")]
-    public byte[] CommandPrefix { get; set; } = new byte[] { 0x01 };
+    public byte[]? CommandPrefix { get; set; }
 
     [Required]
     [JsonConverter(typeof(HexNumberConverter<byte>))]
-    public byte ChannelMask { get; set; } = 0x70;
+    public byte? ChannelMask { get; set; }
 
     [Required]
-    public int ChannelBitShift { get; set; } = 4;
+    public int? ChannelBitShift { get; set; }
 
     [Required]
     [JsonConverter(typeof(HexNumberConverter<int>))]
-    public int ResultBitMask { get; set; } = 0x3FF;
+    public int? ResultBitMask { get; set; }
 
     [Required]
-    public int ResultBitShift { get; set; } = 0;
+    public int? ResultBitShift { get; set; }
 
     [Required]
-    public int ReadByteCount { get; set; } = 3;
+    public int? ReadByteCount { get; set; }
 }
