@@ -25,12 +25,10 @@ public sealed class GlobalValidationFabric : ProjectFabric {
         // Add validation to all fields and properties with validation attributes
         amender
             .SelectMany(compilation => compilation.AllTypes)
-            .SelectMany(type => type.FieldsAndProperties)
-            // .Where(prop => prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))
             // Need to exclude EerieLeap.Configuration namespace because API validation is handled separately
-            .Where(prop =>
-                prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))) &&
-                !prop.DeclaringType.ContainingNamespace.FullName.StartsWith("EerieLeap.Configuration", StringComparison.OrdinalIgnoreCase))
+            .Where(type => !type.ContainingNamespace.FullName.StartsWith("EerieLeap.Configuration", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(type => type.FieldsAndProperties)
+            .Where(prop => prop.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))
             .AddAspect(target => new FieldOrPropertyValidationAspect(target));
     }
 }
