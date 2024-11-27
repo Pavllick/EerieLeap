@@ -10,7 +10,7 @@ public class ValidationAttributeTests {
     [Fact]
     public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertyNull_ValidationFails() {
         // Arrange
-        var model = new SensorConfig { Type = SensorType.Temperature };
+        var model = new SensorConfig { Type = SensorType.Physical };
         var validationContext = new ValidationContext(model);
         var attribute = new RequiredForPhysicalSensorAttribute();
 
@@ -25,7 +25,7 @@ public class ValidationAttributeTests {
     [Fact]
     public void RequiredForPhysicalSensor_WhenPhysicalSensorAndPropertySet_ValidationPasses() {
         // Arrange
-        var model = new SensorConfig { Type = SensorType.Temperature, Channel = 1 };
+        var model = new SensorConfig { Type = SensorType.Physical, Channel = 1 };
         var validationContext = new ValidationContext(model);
         var attribute = new RequiredForPhysicalSensorAttribute();
 
@@ -82,7 +82,7 @@ public class ValidationAttributeTests {
     [Fact]
     public void RequiredForVirtualSensor_WhenPhysicalSensor_ValidationPasses() {
         // Arrange
-        var model = new SensorConfig { Type = SensorType.Temperature };
+        var model = new SensorConfig { Type = SensorType.Physical };
         var validationContext = new ValidationContext(model);
         var attribute = new RequiredForVirtualSensorAttribute();
 

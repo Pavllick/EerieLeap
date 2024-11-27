@@ -213,7 +213,7 @@ public class ConfigControllerTests : FunctionalTestBase {
         var request = new SensorConfigRequest {
             // Name field intentionally omitted
             Id = "invalid_sensor",
-            Type = SensorType.Temperature,
+            Type = SensorType.Physical,
             Unit = "°C",
             Channel = 0,
             MinVoltage = 0.0,

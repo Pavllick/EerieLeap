@@ -41,7 +41,7 @@ public class SensorConfigTests {
         var config = new SensorConfig {
             Id = invalidId,
             Name = "Test",
-            Type = SensorType.Temperature,
+            Type = SensorType.Physical,
             Unit = "C",
             Channel = 0,
             MinVoltage = 0,
@@ -67,7 +67,7 @@ public class SensorConfigTests {
         var config = new SensorConfig {
             Id = "test_sensor",
             Name = "Test Sensor",
-            Type = SensorType.Temperature,
+            Type = SensorType.Physical,
             Unit = "C"
         };
 
@@ -139,7 +139,7 @@ public class SensorConfigTests {
         var config = new SensorConfig {
             Id = "temp_sensor_1",
             Name = "Temperature Sensor 1",
-            Type = SensorType.Temperature,
+            Type = SensorType.Physical,
             Channel = invalidChannel,
             MinVoltage = 0,
             MaxVoltage = 5,

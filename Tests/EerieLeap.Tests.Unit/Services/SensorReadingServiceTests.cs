@@ -79,7 +79,7 @@ public class SensorReadingServiceTests : IDisposable {
         var sensorConfig = new SensorConfig {
             Id = "temp_sensor_1",
             Name = "Temperature Sensor 1",
-            Type = SensorType.Temperature,
+            Type = SensorType.Physical,
             Channel = 0,
             MinVoltage = 0,
             MaxVoltage = 5,

@@ -181,7 +181,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             new() {
                 Id = "coolant_temp",
                 Name = "Coolant Temperature",
-                Type = SensorType.Temperature,
+                Type = SensorType.Physical,
                 Channel = 0,
                 MinVoltage = 0.5,
                 MaxVoltage = 4.5,
@@ -193,7 +193,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             new() {
                 Id = "oil_temp",
                 Name = "Oil Temperature",
-                Type = SensorType.Temperature,
+                Type = SensorType.Physical,
                 Channel = 1,
                 MinVoltage = 0.5,
                 MaxVoltage = 4.5,

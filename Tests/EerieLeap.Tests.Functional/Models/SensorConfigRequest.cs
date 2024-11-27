@@ -24,7 +24,7 @@ public record SensorConfigRequest {
     public static SensorConfigRequest CreateValidPhysical() => new() {
         Id = "test_sensor",
         Name = "Physical Sensor",
-        Type = SensorType.Temperature,
+        Type = SensorType.Physical,
         Unit = "°C",
         Channel = 0,
         MinVoltage = 0.0,

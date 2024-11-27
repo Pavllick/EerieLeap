@@ -46,7 +46,7 @@ public partial class SpiAdc : IAdc, IDisposable {
         await Task.Run(() => {
             var (_, rawValue) = TransferSpi(channel);
             var voltage = ConvertToVoltage(rawValue);
-            LogReading(channel, rawValue, voltage);
+            LogChannelReading(channel, rawValue, voltage);
             return voltage;
         }, cancellationToken).ConfigureAwait(false);
 
@@ -78,9 +78,6 @@ public partial class SpiAdc : IAdc, IDisposable {
         _config == null
             ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
             : (rawValue * _config.ReferenceVoltage!.Value) / ((1 << _config.Resolution!.Value) - 1);
-
-    private void LogReading(int channel, int rawValue, double voltage) =>
-        LogChannelReading(channel, rawValue, voltage);
 
     protected virtual void Dispose(bool disposing) {
         if (_isDisposed)
