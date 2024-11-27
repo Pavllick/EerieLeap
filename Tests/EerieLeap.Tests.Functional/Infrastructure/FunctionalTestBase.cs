@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Json;
 using Xunit;
-using EerieLeap.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
-using EerieLeap.Utilities;
 using EerieLeap.Tests.Functional.Models;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;

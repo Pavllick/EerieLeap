@@ -14,9 +14,9 @@ public partial class AdcConfigController : ConfigControllerBase {
         _adcService = adcService;
 
     [HttpGet]
-    public async Task<ActionResult<AdcConfig>> GetConfiguration() {
+    public ActionResult<AdcConfig> GetConfiguration() {
         try {
-            var config = await _adcService.GetConfigurationAsync().ConfigureAwait(false);
+            var config = _adcService.GetConfiguration();
 
             return config == null
                 ? NotFound("ADC configuration not found")
@@ -34,7 +34,7 @@ public partial class AdcConfigController : ConfigControllerBase {
     }
 
     [HttpPost]
-    public async Task<IActionResult> UpdateConfiguration([Required] AdcConfig config) {
+    public async Task<IActionResult> UpdateConfigurationAsync([Required] AdcConfig config) {
         try {
             await _adcService.UpdateConfigurationAsync(config).ConfigureAwait(false);
 

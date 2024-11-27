@@ -29,10 +29,11 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings() {
         // Arrange
-        var config1 = SensorConfigRequest.CreateValidPhysical() with { Id = "physical_sensor_1" };
+        var config1 = SensorConfigRequest.CreateValidPhysical() with { Id = "physical_sensor_1", Channel = 0 };
 
         var config2 = SensorConfigRequest.CreateValidPhysical() with {
             Id = "physical_sensor_2",
+            Channel = 1,
             ConversionExpression = "x + 10"
         };
 
@@ -94,8 +95,8 @@ public class ReadingsControllerTests : FunctionalTestBase {
         // Arrange
         var configs = new List<SensorConfigRequest>
         {
-            SensorConfigRequest.CreateValidPhysical() with { Id = "sensor1" },
-            SensorConfigRequest.CreateValidPhysical() with { Id = "sensor2" }
+            SensorConfigRequest.CreateValidPhysical() with { Id = "sensor1", Channel = 0 },
+            SensorConfigRequest.CreateValidPhysical() with { Id = "sensor2", Channel = 1 }
         };
 
         await PostSensorConfigsWithDelay(configs);

@@ -9,15 +9,15 @@ namespace EerieLeap.Controllers;
 
 [Route("api/v1/config/sensors")]
 public partial class SensorConfigController : ConfigControllerBase {
-    private readonly ISensorReadingService _sensorService;
+    private readonly ISensorConfigurationService _sensorConfigService;
 
-    public SensorConfigController(ILogger logger, ISensorReadingService sensorService) : base(logger) =>
-        _sensorService = sensorService;
+    public SensorConfigController(ILogger logger, ISensorConfigurationService sensorConfigService) : base(logger) =>
+        _sensorConfigService = sensorConfigService;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SensorConfig>>> GetConfigs() {
+    public ActionResult<IEnumerable<SensorConfig>> GetConfigs() {
         try {
-            var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
+            var configs = _sensorConfigService.GetConfigurations();
             return Ok(configs);
         } catch (JsonException ex) {
             LogConfigsError(ex);
@@ -32,13 +32,12 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<SensorConfig>> GetConfig([FromRoute] string id) {
+    public ActionResult<SensorConfig> GetConfig([FromRoute] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
 
-            var configs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
-            var config = configs.FirstOrDefault(c => c.Id == id);
+            var config = _sensorConfigService.GetConfiguration(id);
 
             if (config == null)
                 return NotFound($"Sensor configuration with Id '{id}' not found");
@@ -57,7 +56,7 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpPost]
-    public async Task<IActionResult> UpdateConfigs([FromBody] IEnumerable<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateConfigsAsync([FromBody] IEnumerable<SensorConfig> configs) {
         try {
             var configsList = configs.ToList();
 
@@ -70,7 +69,7 @@ public partial class SensorConfigController : ConfigControllerBase {
                     return BadRequest($"Duplicate sensor ID found: '{config.Id}'");
             }
 
-            await _sensorService.UpdateConfigurationAsync(configsList).ConfigureAwait(false);
+            await _sensorConfigService.UpdateConfigurationAsync(configsList).ConfigureAwait(false);
 
             return Ok();
         } catch (JsonException ex) {

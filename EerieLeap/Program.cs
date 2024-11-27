@@ -22,6 +22,7 @@ public sealed class Program {
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<AdcFactory>();
         builder.Services.AddSingleton<IAdcConfigurationService, AdcConfigurationService>();
+        builder.Services.AddSingleton<ISensorConfigurationService, SensorConfigurationService>();
         builder.Services.AddSingleton<ISensorReadingService, SensorReadingService>();
         builder.Services.AddHostedService(sp => (SensorReadingService)sp.GetRequiredService<ISensorReadingService>());
 

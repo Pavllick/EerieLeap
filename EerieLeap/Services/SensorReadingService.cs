@@ -1,9 +1,5 @@
-using EerieLeap.Hardware;
 using EerieLeap.Configuration;
 using EerieLeap.Types;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.ComponentModel.DataAnnotations;
 using EerieLeap.Utilities;
 
 namespace EerieLeap.Services;
@@ -11,32 +7,24 @@ namespace EerieLeap.Services;
 public sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
     private readonly ILogger _logger;
     private readonly IAdcConfigurationService _adcService;
-    private readonly string _configPath;
+    private readonly ISensorConfigurationService _sensorsConfigService;
     private readonly AsyncLock _asyncLock = new();
-    private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
-    private readonly JsonSerializerOptions _readOptions = new() {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() }
-    };
-    private List<SensorConfig> _configs;
-    // private readonly IAdc? _adc;
     private Dictionary<string, double> _lastReadings = new();
     private TaskCompletionSource<bool>? _initializationTcs;
 
-    public SensorReadingService(ILogger logger, IAdcConfigurationService adcService, IConfiguration configuration) {
+    public SensorReadingService(ILogger logger, IAdcConfigurationService adcService, ISensorConfigurationService sensorsConfigService) {
         _logger = logger;
         _adcService = adcService;
-        _configPath = configuration.GetValue<string>("ConfigurationPath") ?? throw new ArgumentException("ConfigurationPath not set in configuration");
-        _configs = new List<SensorConfig>();
+        _sensorsConfigService = sensorsConfigService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         _initializationTcs = new TaskCompletionSource<bool>();
 
-        await _adcService.InitializeAdcAsync().ConfigureAwait(false);
-
         try {
-            await LoadConfigurationAsync().ConfigureAwait(false);
+            await _adcService.InitializeAsync().ConfigureAwait(false);
+            await _sensorsConfigService.InitializeAsync().ConfigureAwait(false);
+
             _initializationTcs.TrySetResult(true);
 
             while (!stoppingToken.IsCancellationRequested) {
@@ -77,30 +65,10 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             : null;
     }
 
-    public async Task<IEnumerable<SensorConfig>> GetSensorConfigurationsAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
-
-        return _configs;
-    }
-
-    public async Task UpdateConfigurationAsync([Required] IEnumerable<SensorConfig> configs) {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
-
-        var configsList = configs.ToList();
-
-        _lastReadings.Clear(); // TODO: Should we clear readings only for changed sensors
-
-        var json = JsonSerializer.Serialize(configsList, _writeOptions);
-        await File.WriteAllTextAsync(Path.Combine(_configPath, "sensors.json"), json).ConfigureAwait(false);
-
-        _configs = configsList;
-        LogSensorConfigsUpdated();
-    }
-
     private async Task UpdateReadingsAsync() {
         Dictionary<string, double> newReadings = new();
         var adc = await _adcService.GetAdcAsync().ConfigureAwait(false);
-        var sensors = _configs.ToArray();
+        var sensors = _sensorsConfigService.GetConfigurations();
 
         // First process ADC sensors
         foreach (var sensor in sensors.Where(s => s.Type != SensorType.Virtual)) {
@@ -148,72 +116,6 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         }
     }
 
-    private async Task LoadConfigurationAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
-
-        try {
-            var configPath = Path.Combine(_configPath, "sensors.json");
-
-            List<SensorConfig> configs;
-
-            if (File.Exists(configPath)) {
-                var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-                configs = JsonSerializer.Deserialize<List<SensorConfig>>(json, _readOptions) ?? throw new JsonException("Failed to deserialize sensor configs");
-            } else {
-                configs = CreateDefaultSensorConfigs();
-
-                Directory.CreateDirectory(_configPath);
-                var json = JsonSerializer.Serialize(configs, _writeOptions);
-                await File.WriteAllTextAsync(configPath, json).ConfigureAwait(false);
-
-                LogDefaultSensorConfigsUsed();
-            }
-
-            _configs = configs;
-        } catch (Exception ex) {
-            LogConfigurationLoadError(ex);
-            throw;
-        }
-    }
-
-    private static List<SensorConfig> CreateDefaultSensorConfigs() =>
-        new List<SensorConfig> {
-            new() {
-                Id = "coolant_temp",
-                Name = "Coolant Temperature",
-                Type = SensorType.Physical,
-                Channel = 0,
-                MinVoltage = 0.5,
-                MaxVoltage = 4.5,
-                MinValue = 0,
-                MaxValue = 120,
-                Unit = "°C",
-                SamplingRateMs = 1000
-            },
-            new() {
-                Id = "oil_temp",
-                Name = "Oil Temperature",
-                Type = SensorType.Physical,
-                Channel = 1,
-                MinVoltage = 0.5,
-                MaxVoltage = 4.5,
-                MinValue = 0,
-                MaxValue = 150,
-                Unit = "°C",
-                SamplingRateMs = 1000
-            },
-            new() {
-                Id = "avg_temp",
-                Name = "Average Temperature",
-                Type = SensorType.Virtual,
-                MinValue = 0,
-                MaxValue = 150,
-                Unit = "°C",
-                SamplingRateMs = 1000,
-                ConversionExpression = "({coolant_temp} + {oil_temp}) / 2 * Sin(PI/4)"
-            }
-        };
-
     private static double ConvertVoltageToValue(double voltage, SensorConfig sensor) {
         if (!string.IsNullOrEmpty(sensor.ConversionExpression)) {
             try {
@@ -259,15 +161,6 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
 
     [LoggerMessage(Level = LogLevel.Warning, EventId = 5, Message = "Expression not specified for virtual sensor {name}")]
     private partial void LogExpressionNotSpecified(string name, Exception? ex);
-
-    [LoggerMessage(Level = LogLevel.Error, EventId = 6, Message = "Failed to load Sensor configurations")]
-    private partial void LogConfigurationLoadError(Exception ex);
-
-    [LoggerMessage(Level = LogLevel.Information, EventId = 7, Message = "Using default sensor configurations")]
-    private partial void LogDefaultSensorConfigsUsed();
-
-    [LoggerMessage(Level = LogLevel.Information, EventId = 8, Message = "Updated sensor configurations")]
-    private partial void LogSensorConfigsUpdated();
 
     #endregion
 }

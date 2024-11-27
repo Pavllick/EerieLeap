@@ -237,7 +237,7 @@ public class ConfigControllerTests : FunctionalTestBase {
         // Arrange
         var jsonContent = @"[{
             ""id"": ""invalid_sensor"",
-            ""type"": ""Temperature"",
+            ""type"": ""Physical"",
             ""unit"": ""°C"",
             ""channel"": 0,
             ""minVoltage"": 0.0,
@@ -255,6 +255,24 @@ public class ConfigControllerTests : FunctionalTestBase {
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Name", content);
     }
+
+    // TODO: Bug, returns config field is missing, which is a parameter name in the controller POST method
+    // [Fact]
+    // public async Task UpdateSensorConfigs_WithInvalidConfigWithJson_ReturnsBadRequest2() {
+    //     // Arrange
+    //     var jsonContent = @"[{
+    //         ""id"": ""invalid_sensor"",
+    //         ""type"": ""Temperature""
+    //     }]";
+
+    //     // Act
+    //     var response = await PostWithFullResponse("api/v1/config/sensors", jsonContent);
+
+    //     // Assert
+    //     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    //     var content = await response.Content.ReadAsStringAsync();
+    //     Assert.Contains("Name", content);
+    // }
 
     [Fact]
     public async Task UpdateSensorConfigs_WithDuplicateIds_ReturnsBadRequest() {

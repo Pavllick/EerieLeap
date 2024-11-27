@@ -18,7 +18,8 @@ public class SensorReadingServiceTests : IDisposable {
     private readonly Mock<ILogger> _mockAdcFactoryLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IAdcConfigurationService> _mockAdcService;
-    private readonly SensorReadingService _service;
+    private readonly ISensorConfigurationService _sensorConfigService;
+    private readonly SensorReadingService _sensorReadingService;
     private readonly string _testDir;
     private readonly MockAdc _mockAdc;
     private bool _disposed;
@@ -49,17 +50,20 @@ public class SensorReadingServiceTests : IDisposable {
         _mockConfiguration.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
 
         _mockAdc = new MockAdc();
-        _mockAdcService.Setup(x => x.GetAdcAsync())
+        _mockAdcService
+            .Setup(x => x.GetAdcAsync())
             .ReturnsAsync(_mockAdc);
 
-        _service = new SensorReadingService(_mockLogger.Object, _mockAdcService.Object, _mockConfiguration.Object);
+        _sensorConfigService = new SensorConfigurationService(_mockLogger.Object, _mockConfiguration.Object);
+        _sensorReadingService = new SensorReadingService(_mockLogger.Object, _mockAdcService.Object, _sensorConfigService);
     }
 
     protected virtual void Dispose(bool disposing) {
         if (!_disposed) {
             if (disposing) {
-                _service?.Dispose();
+                _sensorReadingService?.Dispose();
                 _mockAdc?.Dispose();
+                _sensorConfigService.Dispose();
             }
             if (Directory.Exists(_testDir)) {
                 Directory.Delete(_testDir, true);
@@ -113,8 +117,8 @@ public class SensorReadingServiceTests : IDisposable {
         _mockAdc.Configure(adcConfig);
 
         // Act
-        await _service.StartAsync(CancellationToken.None);
-        await _service.WaitForInitializationAsync();
+        await _sensorReadingService.StartAsync(CancellationToken.None);
+        await _sensorReadingService.WaitForInitializationAsync();
 
         // Assert
         // Service should start without throwing exceptions
@@ -139,9 +143,9 @@ public class SensorReadingServiceTests : IDisposable {
         await File.WriteAllTextAsync(sensorsJsonPath, invalidJson, new UTF8Encoding(false));  // No BOM
 
         // Act & Assert
-        await _service.StartAsync(CancellationToken.None);
+        await _sensorReadingService.StartAsync(CancellationToken.None);
         var ex = await Assert.ThrowsAsync<JsonException>(() =>
-            _service.WaitForInitializationAsync());
+            _sensorReadingService.WaitForInitializationAsync());
 
         Assert.Contains("json value could not be converted", ex.Message.ToLowerInvariant());
 

@@ -3,19 +3,17 @@ using EerieLeap.Hardware;
 using EerieLeap.Utilities;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EerieLeap.Services;
 
-public sealed partial class AdcConfigurationService : IAdcConfigurationService, IDisposable {
+public sealed partial class AdcConfigurationService : IAdcConfigurationService {
     private readonly ILogger _logger;
     private readonly AdcFactory _adcFactory;
     private readonly string _configPath;
     private readonly AsyncLock _asyncLock = new();
     private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
     private readonly JsonSerializerOptions _readOptions = new() {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() }
+        PropertyNameCaseInsensitive = true
     };
 
     private AdcConfig _config;
@@ -28,7 +26,7 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService, 
         _config = new AdcConfig();
     }
 
-    public async Task InitializeAdcAsync() {
+    public async Task InitializeAsync() {
         if (_adc != null)
             return;
 
@@ -46,11 +44,8 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService, 
         return _adc!;
     }
 
-    public async Task<AdcConfig> GetConfigurationAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
-
-        return _config;
-    }
+    public AdcConfig GetConfiguration() =>
+        _config;
 
     public async Task UpdateConfigurationAsync([Required] AdcConfig config) {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);

@@ -3,9 +3,9 @@ using EerieLeap.Hardware;
 
 namespace EerieLeap.Services;
 
-public interface IAdcConfigurationService {
-    Task InitializeAdcAsync();
+public interface IAdcConfigurationService : IDisposable {
+    Task InitializeAsync();
     Task<IAdc> GetAdcAsync();
-    Task<AdcConfig> GetConfigurationAsync();
+    AdcConfig GetConfiguration();
     Task UpdateConfigurationAsync(AdcConfig config);
 }

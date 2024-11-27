@@ -9,23 +9,20 @@ namespace EerieLeap.Controllers;
 [Route("api/v1/config")]
 public partial class ConfigController : ConfigControllerBase {
     private readonly IAdcConfigurationService _adcService;
-    private readonly ISensorReadingService _sensorService;
+    private readonly ISensorConfigurationService _sensorConfigService;
 
-    public ConfigController(ILogger logger, IAdcConfigurationService adcService, ISensorReadingService sensorService)
+    public ConfigController(ILogger logger, IAdcConfigurationService adcService, ISensorConfigurationService sensorConfigService)
         : base(logger) {
         _adcService = adcService;
-        _sensorService = sensorService;
+        _sensorConfigService = sensorConfigService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<CombinedConfig>> GetConfig() {
+    public ActionResult<CombinedConfig> GetConfig() {
         try {
-            var adcConfig = await _adcService.GetConfigurationAsync().ConfigureAwait(false);
-            var sensorConfigs = await _sensorService.GetSensorConfigurationsAsync().ConfigureAwait(false);
-
             var combinedConfig = new CombinedConfig {
-                AdcConfig = adcConfig,
-                SensorConfigs = sensorConfigs
+                AdcConfig = _adcService.GetConfiguration(),
+                SensorConfigs = _sensorConfigService.GetConfigurations()
             };
 
             return Ok(combinedConfig);
