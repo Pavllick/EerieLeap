@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using EerieLeap.Utilities;
+using EerieLeap.Utilities.Converters;
 
 namespace EerieLeap.Tests.Functional.Models;
 

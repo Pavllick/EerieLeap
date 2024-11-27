@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EerieLeap.Utilities;
+namespace EerieLeap.Utilities.Converters;
 
 public sealed class HexByteArrayConverter : JsonConverter<byte[]?> {
     public override bool HandleNull => true;

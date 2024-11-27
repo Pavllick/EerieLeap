@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using EerieLeap.Utilities;
+using EerieLeap.Utilities.Converters;
 using Xunit;
 
-namespace EerieLeap.Tests.Unit.Utilities;
+namespace EerieLeap.Tests.Unit.Utilities.Converters;
 
 public class HexByteArrayConverterTests {
     private readonly JsonSerializerOptions _options;

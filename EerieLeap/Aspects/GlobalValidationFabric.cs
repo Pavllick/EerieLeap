@@ -8,6 +8,10 @@ using Metalama.Framework.Advising;
 
 namespace EerieLeap.Aspects;
 
+// NOTE: Currently only validaties properties, fields, and complex type method and constructor parameters.
+// [Required] attribute supported on all properties, fields and parameters.
+// To validate simplie objects, Validator.ValidateValue(...) must be used, which accepts validation attributes
+// as one of the parameters, but I didn't figure out how to retreive them at compilation time.
 [CompileTime]
 public sealed class GlobalValidationFabric : ProjectFabric {
     [SuppressMessage("Style", "IDE0016:Use 'throw' expression", Justification = "ThrowIfNull is not supported here")]
@@ -26,7 +30,6 @@ public sealed class GlobalValidationFabric : ProjectFabric {
         // Add validation to all constructors that have parameters with validation attributes
         amender
             .SelectMany(compilation => compilation.AllTypes)
-            // .SelectMany(type => type.Constructors)
             .Where(type => type.Constructors.Any()
                 && type.Constructors.Any(c => c.Parameters.Any(p => p.Attributes.Any(a => a.Type.Is(typeof(ValidationAttribute))))))
             .AddAspect(target => new ConstructorValidationAspect());

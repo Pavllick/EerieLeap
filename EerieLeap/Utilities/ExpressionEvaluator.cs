@@ -2,7 +2,7 @@ using NCalc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace EerieLeap.Services;
+namespace EerieLeap.Utilities;
 
 public static class ExpressionEvaluator {
     private static readonly Regex _sensorIdRegex = new(@"\{([a-z_][a-z0-9_]*)\}", RegexOptions.Compiled);

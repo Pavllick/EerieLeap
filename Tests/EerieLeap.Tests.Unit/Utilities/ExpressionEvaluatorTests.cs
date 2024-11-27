@@ -1,8 +1,9 @@
-using EerieLeap.Services;
+using System.ComponentModel.DataAnnotations;
+using EerieLeap.Utilities;
 using NCalc;
 using Xunit;
 
-namespace EerieLeap.Tests.Unit.Services;
+namespace EerieLeap.Tests.Unit.Utilities;
 
 public class ExpressionEvaluatorTests {
     [Theory]
@@ -80,18 +81,19 @@ public class ExpressionEvaluatorTests {
         Assert.Throws<ArgumentNullException>(() => ExpressionEvaluator.EvaluateWithSensors(expression, null!));
     }
 
-    // TODO: Enable when validation is implemented
-    // [Theory]
-    // [InlineData("")]
+    // TODO: Uncomment when validations are implemented
+    [Theory]
+    [InlineData(null, typeof(ArgumentNullException))]
+    // [InlineData("", typeof(ValidationException))]
     // [InlineData(" ")]
     // [InlineData("\t")]
-    // public void EvaluateWithSensors_WithEmptyExpression_ThrowsValidationException(string expression) {
-    //     // Arrange
-    //     var sensorValues = new Dictionary<string, double> { { "sensor1", 1.0 } };
+    public void EvaluateWithSensors_WithEmptyExpression_ThrowsValidationException(string expression, Type exceptionType) {
+        // Arrange
+        var sensorValues = new Dictionary<string, double> { { "sensor1", 1.0 } };
 
-    //     // Act & Assert
-    //     var ex = Assert.Throws<ValidationException>(() =>
-    //         ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
-    //     Assert.Contains("expression", ex.Message, StringComparison.OrdinalIgnoreCase);
-    // }
+        // Act & Assert
+        var ex = Assert.ThrowsAny<Exception>(() => ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
+        Assert.IsType(exceptionType, ex);
+        Assert.Contains("expression", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
