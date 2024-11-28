@@ -1,5 +1,8 @@
 using System.Text.Json;
 using EerieLeap.Utilities;
+using EerieLeap.Configuration;
+using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Repositories;
 
@@ -13,12 +16,12 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
 
     public JsonConfigurationRepository(
         ILogger logger,
-        IConfiguration configuration,
+        [Required] IOptions<ConfigurationOptions> options,
         JsonSerializerOptions? readOptions = null,
         JsonSerializerOptions? writeOptions = null) {
 
         _logger = logger;
-        _basePath = configuration.GetValue<string>("ConfigurationPath")
+        _basePath = options.Value.ConfigurationPath
             ?? throw new ArgumentException("ConfigurationPath not set in configuration");
 
         _readOptions = readOptions ?? new JsonSerializerOptions {
@@ -44,8 +47,6 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
                 return new ConfigurationResult<T>(false, Error: $"Configuration '{name}' not found");
 
             var json = await File.ReadAllTextAsync(path).ConfigureAwait(false);
-            Console.WriteLine(json);
-
             var config = JsonSerializer.Deserialize<T>(json, _readOptions);
 
             if (config == null)

@@ -5,6 +5,7 @@ using EerieLeap.Types;
 using EerieLeap.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Device.Spi;
 using System.Text;
@@ -17,7 +18,6 @@ public class SensorReadingServiceTests : IDisposable {
     private readonly string _testConfigPath;
     private readonly Mock<ILogger> _mockLogger;
     private readonly Mock<ILogger> _mockAdcFactoryLogger;
-    private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IAdcConfigurationService> _mockAdcService;
     private readonly JsonConfigurationRepository _configRepository;
     private readonly SensorConfigurationService _sensorConfigService;
@@ -41,11 +41,10 @@ public class SensorReadingServiceTests : IDisposable {
         _mockAdcFactoryLogger = new Mock<ILogger>();
         _mockAdcFactoryLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
-        // Setup configuration mock
-        var configSection = new Mock<IConfigurationSection>();
-        configSection.Setup(x => x.Value).Returns(_testConfigPath);
-        _mockConfiguration = new Mock<IConfiguration>();
-        _mockConfiguration.Setup(x => x.GetSection("ConfigurationPath")).Returns(configSection.Object);
+        // Setup configuration options
+        var configOptions = new ConfigurationOptions { ConfigurationPath = _testConfigPath };
+        var mockOptions = new Mock<IOptions<ConfigurationOptions>>();
+        mockOptions.Setup(x => x.Value).Returns(configOptions);
 
         _mockAdcService = new Mock<IAdcConfigurationService>();
         _mockAdc = new MockAdc();
@@ -53,7 +52,7 @@ public class SensorReadingServiceTests : IDisposable {
             .Setup(x => x.GetAdc())
             .Returns(_mockAdc);
 
-        _configRepository = new JsonConfigurationRepository(_mockLogger.Object, _mockConfiguration.Object);
+        _configRepository = new JsonConfigurationRepository(_mockLogger.Object, mockOptions.Object);
         _sensorConfigService = new SensorConfigurationService(_mockLogger.Object, _configRepository);
         _sensorReadingService = new SensorReadingService(_mockLogger.Object, _mockAdcService.Object, _sensorConfigService);
     }
