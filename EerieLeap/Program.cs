@@ -1,5 +1,6 @@
 using EerieLeap.Services;
 using EerieLeap.Hardware;
+using EerieLeap.Repositories;
 using System.Text.Json.Serialization;
 
 namespace EerieLeap;
@@ -21,6 +22,11 @@ public sealed class Program {
         // Register services
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<AdcFactory>();
+
+        // Register configuration repository
+        builder.Services.AddSingleton<IConfigurationRepository, JsonConfigurationRepository>();
+
+        // Register configuration services
         builder.Services.AddSingleton<IAdcConfigurationService, AdcConfigurationService>();
         builder.Services.AddSingleton<ISensorConfigurationService, SensorConfigurationService>();
         builder.Services.AddSingleton<ISensorReadingService, SensorReadingService>();

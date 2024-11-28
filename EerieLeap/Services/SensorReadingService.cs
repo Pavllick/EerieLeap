@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using EerieLeap.Configuration;
 using EerieLeap.Types;
 using EerieLeap.Utilities;
@@ -9,7 +10,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
     private readonly IAdcConfigurationService _adcService;
     private readonly ISensorConfigurationService _sensorsConfigService;
     private readonly AsyncLock _asyncLock = new();
-    private Dictionary<string, double> _lastReadings = new();
+    private readonly ConcurrentDictionary<string, double> _lastReadings = new();
     private TaskCompletionSource<bool>? _initializationTcs;
 
     public SensorReadingService(ILogger logger, IAdcConfigurationService adcService, ISensorConfigurationService sensorsConfigService) {
@@ -45,9 +46,6 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         }
     }
 
-    public Task WaitForInitializationAsync() =>
-        _initializationTcs?.Task ?? Task.CompletedTask;
-
     public async Task<IEnumerable<ReadingResult>> GetReadingsAsync() {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
@@ -66,9 +64,11 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
     }
 
     private async Task UpdateReadingsAsync() {
+        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+
         Dictionary<string, double> newReadings = new();
-        var adc = await _adcService.GetAdcAsync().ConfigureAwait(false);
-        var sensors = _sensorsConfigService.GetConfigurations();
+        var adc = _adcService.GetAdc()!;
+        var sensors = _sensorsConfigService.GetConfigurations()!;
 
         // First process ADC sensors
         foreach (var sensor in sensors.Where(s => s.Type != SensorType.Virtual)) {
@@ -111,9 +111,9 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             }
         }
 
-        using (var releaser = await _asyncLock.LockAsync().ConfigureAwait(false)) {
-            _lastReadings = newReadings;
-        }
+        _lastReadings.Clear();
+        foreach (var (id, value) in newReadings)
+            _lastReadings.AddOrUpdate(id, value, (_, _) => value);
     }
 
     private static double ConvertVoltageToValue(double voltage, SensorConfig sensor) {
@@ -139,6 +139,10 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
 
         return ((voltage - sensor.MinVoltage.Value) / voltageRange * valueRange) + sensor.MinValue.Value;
     }
+
+    // Needed for unit tests to wait for initialization
+    public Task WaitForInitializationAsync() =>
+        _initializationTcs?.Task ?? Task.CompletedTask;
 
     public sealed override void Dispose() {
         _asyncLock.Dispose();

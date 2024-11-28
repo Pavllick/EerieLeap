@@ -1,29 +1,25 @@
 using EerieLeap.Configuration;
 using EerieLeap.Hardware;
+using EerieLeap.Repositories;
 using EerieLeap.Utilities;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 namespace EerieLeap.Services;
 
 public sealed partial class AdcConfigurationService : IAdcConfigurationService {
     private readonly ILogger _logger;
     private readonly AdcFactory _adcFactory;
-    private readonly string _configPath;
+    private readonly IConfigurationRepository _repository;
     private readonly AsyncLock _asyncLock = new();
-    private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
-    private readonly JsonSerializerOptions _readOptions = new() {
-        PropertyNameCaseInsensitive = true
-    };
-
-    private AdcConfig _config;
+    private AdcConfig? _config;
     private IAdc? _adc;
 
-    public AdcConfigurationService(ILogger logger, AdcFactory adcFactory, IConfiguration configuration) {
+    private const string ConfigName = "adc";
+
+    public AdcConfigurationService(ILogger logger, AdcFactory adcFactory, IConfigurationRepository repository) {
         _logger = logger;
         _adcFactory = adcFactory;
-        _configPath = configuration.GetValue<string>("ConfigurationPath") ?? throw new ArgumentException("ConfigurationPath not set in configuration");
-        _config = new AdcConfig();
+        _repository = repository;
     }
 
     public async Task InitializeAsync() {
@@ -35,59 +31,39 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
         _adc = _adcFactory.CreateAdc();
-        _adc.Configure(_config);
+        _adc.Configure(_config!);
     }
 
-    public async Task<IAdc> GetAdcAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+    public IAdc? GetAdc() =>
+        _adc;
 
-        return _adc!;
-    }
-
-    public AdcConfig GetConfiguration() =>
+    public AdcConfig? GetConfiguration() =>
         _config;
 
     public async Task UpdateConfigurationAsync([Required] AdcConfig config) {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
-        var configPath = Path.Combine(_configPath, "adc.json");
-        var json = JsonSerializer.Serialize(config, _writeOptions);
-        await File.WriteAllTextAsync(configPath, json).ConfigureAwait(false);
+        var result = await _repository.SaveAsync(ConfigName, config).ConfigureAwait(false);
+        if (!result.Success)
+            throw new InvalidOperationException($"Failed to save ADC configuration: {result.Error}");
 
         _config = config;
-
-        LogConfigurationUpdated();
+        _adc?.Configure(config);
     }
 
     private async Task LoadConfigurationAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+        var result = await _repository.LoadAsync<AdcConfig>(ConfigName);
 
-        try {
-            var configPath = Path.Combine(_configPath, "adc.json");
-
-            AdcConfig config;
-
-            if (File.Exists(configPath)) {
-                var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-                config = JsonSerializer.Deserialize<AdcConfig>(json, _readOptions) ?? throw new JsonException("Failed to deserialize ADC config");
-            } else {
-                config = CreateDefaultConfig();
-
-                Directory.CreateDirectory(_configPath);
-                var json = JsonSerializer.Serialize(config, _writeOptions);
-                await File.WriteAllTextAsync(configPath, json).ConfigureAwait(false);
-
-                LogDefaultConfigurationCreated();
-            }
-
-            _config = config;
-        } catch (Exception ex) {
-            LogConfigurationLoadError(ex);
-            throw;
+        if (!result.Success) {
+            _config = CreateDefaultConfiguration();
+            await _repository.SaveAsync(ConfigName, _config);
+            return;
         }
+
+        _config = result.Data;
     }
 
-    private static AdcConfig CreateDefaultConfig() =>
+    private static AdcConfig CreateDefaultConfiguration() =>
         new AdcConfig {
             Type = "ADS7953",
             BusId = 0,

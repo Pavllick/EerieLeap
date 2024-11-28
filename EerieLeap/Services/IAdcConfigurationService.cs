@@ -5,7 +5,7 @@ namespace EerieLeap.Services;
 
 public interface IAdcConfigurationService : IDisposable {
     Task InitializeAsync();
-    Task<IAdc> GetAdcAsync();
-    AdcConfig GetConfiguration();
+    AdcConfig? GetConfiguration();
+    IAdc? GetAdc();
     Task UpdateConfigurationAsync(AdcConfig config);
 }

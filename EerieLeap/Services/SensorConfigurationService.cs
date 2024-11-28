@@ -2,59 +2,44 @@ using System.Collections.Concurrent;
 using EerieLeap.Types;
 using System.ComponentModel.DataAnnotations;
 using EerieLeap.Configuration;
+using EerieLeap.Repositories;
 using EerieLeap.Utilities;
-using System.Text.Json;
 
 namespace EerieLeap.Services;
 
 public partial class SensorConfigurationService : ISensorConfigurationService {
-    private readonly ConcurrentDictionary<string, SensorConfig> _configs;
-    private readonly string _configPath;
+    private readonly ConcurrentDictionary<string, SensorConfig> _configs = new();
+    private readonly IConfigurationRepository _repository;
     private readonly ILogger _logger;
     private readonly AsyncLock _asyncLock = new();
-    private readonly JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
-    private readonly JsonSerializerOptions _readOptions = new() {
-        PropertyNameCaseInsensitive = true
-    };
     private bool _disposed;
 
-    public SensorConfigurationService(ILogger logger, IConfiguration configuration) {
-        _logger = logger;
+    private const string ConfigName = "sensors";
 
-        _configs = new ConcurrentDictionary<string, SensorConfig>();
-        _configPath = configuration.GetValue<string>("ConfigurationPath")
-            ?? throw new ArgumentException("ConfigurationPath not set in configuration");
+    public SensorConfigurationService(ILogger logger, IConfigurationRepository repository) {
+        _logger = logger;
+        _repository = repository;
     }
 
     public async Task InitializeAsync() =>
         await LoadConfigurationAsync().ConfigureAwait(false);
 
     private async Task LoadConfigurationAsync() {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+        var result = await _repository.LoadAsync<List<SensorConfig>>(ConfigName).ConfigureAwait(false);
 
-        try {
-            var configPath = Path.Combine(_configPath, "sensors.json");
+        if (!result.Success) {
+            var defaultConfigs = CreateDefaultSensorConfigs();
 
-            List<SensorConfig> configs;
+            await _repository.SaveAsync(ConfigName, defaultConfigs).ConfigureAwait(false);
 
-            if (File.Exists(configPath)) {
-                var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-                configs = JsonSerializer.Deserialize<List<SensorConfig>>(json, _readOptions) ?? throw new JsonException("Failed to deserialize sensor configs");
-            } else {
-                configs = CreateDefaultSensorConfigs();
+            foreach (var config in defaultConfigs)
+                _configs.TryAdd(config.Id, config);
 
-                Directory.CreateDirectory(_configPath);
-                var json = JsonSerializer.Serialize(configs, _writeOptions);
-                await File.WriteAllTextAsync(configPath, json).ConfigureAwait(false);
-
-                LogDefaultSensorConfigsUsed();
-            }
-            foreach (var config in configs)
-                _configs.AddOrUpdate(config.Id, config, (_, _) => config);
-        } catch (Exception ex) {
-            LogConfigurationLoadError(ex);
-            throw;
+            return;
         }
+
+        foreach (var config in result.Data!)
+            _configs.TryAdd(config.Id, config);
     }
 
     public IReadOnlyList<SensorConfig> GetConfigurations() {
@@ -74,42 +59,48 @@ public partial class SensorConfigurationService : ISensorConfigurationService {
 
     public async Task<bool> UpdateConfigurationAsync([Required] IEnumerable<SensorConfig> configs) {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
-
         ObjectDisposedException.ThrowIf(_disposed, this);
+
         if (!ValidateConfigurations(configs))
             return false;
 
-        var configsList = configs.ToList();
-
         // _lastReadings.Clear(); // TODO: Should we clear readings only for changed sensors
 
-        var json = JsonSerializer.Serialize(configsList, _writeOptions);
-        await File.WriteAllTextAsync(Path.Combine(_configPath, "sensors.json"), json).ConfigureAwait(false);
+        var configsList = configs.ToList();
+        var configsDict = configsList.ToDictionary(c => c.Id);
+
+        var result = await _repository.SaveAsync(ConfigName, configsDict).ConfigureAwait(false);
+        if (!result.Success) {
+            LogConfigurationUpdateError(result.Error!);
+            return false;
+        }
 
         _configs.Clear();
-        foreach (var config in configsList)
-            _configs.AddOrUpdate(config.Id, config, (_, _) => config);
-
-        LogSensorConfigsUpdated();
+        foreach (var (id, config) in configsDict)
+            _configs.TryAdd(id, config);
 
         return true;
     }
 
     public bool ValidateConfigurations([Required] IEnumerable<SensorConfig> configs) {
-        var configList = configs.ToList();
+        var configsList = configs.ToList();
 
-        foreach (var config in configList) {
-            if (!ValidateConfiguration(config)) {
-                LogValidationConfigFailed(config?.Id ?? "null");
+        var duplicateIds = configsList
+            .GroupBy(c => c.Id)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        if (duplicateIds.Count > 0) {
+            LogValidationDuplicateIds(string.Join(", ", duplicateIds));
+            return false;
+        }
+
+        foreach (var config in configsList) {
+            if (!ValidateConfiguration(config))
                 return false;
-            }
 
-            if (configList.Count(c => c.Id == config.Id) > 1) {
-                LogValidationDuplicateId(config.Id);
-                return false;
-            }
-
-            if (config.Type == SensorType.Physical && configList.Count(c => c.Channel == config.Channel) > 1) {
+            if (config.Type == SensorType.Physical && configsList.Count(c => c.Channel == config.Channel) > 1) {
                 LogValidationDuplicateChannel(config.Channel, config.Id);
                 return false;
             }
@@ -194,28 +185,22 @@ public partial class SensorConfigurationService : ISensorConfigurationService {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to load Sensor configurations")]
-    private partial void LogConfigurationLoadError(Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Configuration update failed: {Error}")]
+    private partial void LogConfigurationUpdateError(string error);
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 2, Message = "Using default sensor configurations")]
-    private partial void LogDefaultSensorConfigsUsed();
+    [LoggerMessage(Level = LogLevel.Error, Message = "Validation error: {Message}")]
+    private partial void LogValidationError(string message);
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 3, Message = "Updated sensor configurations")]
-    private partial void LogSensorConfigsUpdated();
+    [LoggerMessage(Level = LogLevel.Error, Message = "Duplicate sensor IDs found: {Ids}")]
+    private partial void LogValidationDuplicateIds(string ids);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 4, Message = "Validation failed for sensor config with ID: {sensorId}")]
-    private partial void LogValidationConfigFailed(string sensorId);
-
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 5, Message = "Validation failed: duplicate sensor ID found: {sensorId}")]
-    private partial void LogValidationDuplicateId(string sensorId);
-
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 6, Message = "Validation failed: duplicate channel {channel} found for physical sensor {sensorId}")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Validation failed: duplicate channel {channel} found for physical sensor {sensorId}")]
     private partial void LogValidationDuplicateChannel(int? channel, string sensorId);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 7, Message = "Validation error for sensor {sensorId}: {error}")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Validation error for sensor {sensorId}: {error}")]
     private partial void LogValidationError(string sensorId, string error);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 8, Message = "Validation failed for sensor {sensorId}: MinVoltage ({minVoltage}) must be less than MaxVoltage ({maxVoltage})")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Validation failed for sensor {sensorId}: MinVoltage ({minVoltage}) must be less than MaxVoltage ({maxVoltage})")]
     private partial void LogValidationVoltageError(string sensorId, double? minVoltage, double? maxVoltage);
 
     #endregion

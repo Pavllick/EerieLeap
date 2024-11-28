@@ -1,46 +1,57 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Json;
 using Xunit;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 using EerieLeap.Tests.Functional.Models;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
 
-public class FunctionalTestBase : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime {
-    protected readonly WebApplicationFactory<Program> Factory;
+public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDisposable {
+    private readonly TestWebApplicationFactory _factory;
     protected readonly HttpClient Client;
+    private bool _initialized;
+    private bool _disposed;
 
-    protected FunctionalTestBase(WebApplicationFactory<Program> factory) {
-        Factory = factory.WithWebHostBuilder(builder => {
-            builder.ConfigureServices(services => {
-                services.AddLogging(logging => {
-                    logging.ClearProviders();
-                    logging.AddFilter((category, level) =>
-                        level >= LogLevel.Error);
-                    // logging.AddDebug();
-                    // logging.SetMinimumLevel(LogLevel.Debug);
-                });
-            });
-        });
-        Client = Factory.CreateClient();
+    protected FunctionalTestBase(TestWebApplicationFactory factory) {
+        _factory = factory;
+        Client = _factory.CreateClient();
     }
 
     public async Task InitializeAsync() {
-        // Set up initial ADC configuration
-        var adcConfig = AdcConfigRequest.CreateValid();
+        if (_initialized)
+            return;
 
-        var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
-        if (!response.IsSuccessStatusCode) {
-            var content = await response.Content.ReadAsStringAsync();
-            throw new InvalidOperationException($"Failed to initialize ADC config: {response.StatusCode} - {content}");
+        try {
+            // Set up initial ADC configuration
+            var adcConfig = AdcConfigRequest.CreateValid();
+
+            var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
+            if (!response.IsSuccessStatusCode) {
+                var content = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException($"Failed to initialize ADC config: {response.StatusCode} - {content}");
+            }
+
+            _initialized = true;
+        } catch (Exception) {
+            Dispose();
+            throw;
         }
     }
 
-    public Task DisposeAsync() =>
-        Task.CompletedTask;
+    protected virtual void Dispose(bool disposing) {
+        if (!_disposed) {
+            if (disposing) {
+                // Dispose managed resources
+                Client?.Dispose();
+            }
+            _disposed = true;
+        }
+    }
+
+    public void Dispose() {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
     protected async Task<T?> GetAsync<T>(string url) where T : class {
         var response = await Client.GetAsync(url);

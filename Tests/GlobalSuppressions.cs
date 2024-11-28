@@ -55,3 +55,6 @@ using System.Diagnostics.CodeAnalysis;
 // Suppress naming style warnings in test projects
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles",
     Justification = "Test projects may use different naming conventions for clarity")]
+
+[assembly: SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates",
+    Justification = "Using LoggerMessage delegates is not important for test code")]

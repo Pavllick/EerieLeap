@@ -2,6 +2,7 @@ using EerieLeap.Configuration;
 using EerieLeap.Hardware;
 using EerieLeap.Services;
 using EerieLeap.Types;
+using EerieLeap.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,7 +19,8 @@ public class SensorReadingServiceTests : IDisposable {
     private readonly Mock<ILogger> _mockAdcFactoryLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IAdcConfigurationService> _mockAdcService;
-    private readonly ISensorConfigurationService _sensorConfigService;
+    private readonly JsonConfigurationRepository _configRepository;
+    private readonly SensorConfigurationService _sensorConfigService;
     private readonly SensorReadingService _sensorReadingService;
     private readonly string _testDir;
     private readonly MockAdc _mockAdc;
@@ -39,22 +41,20 @@ public class SensorReadingServiceTests : IDisposable {
         _mockAdcFactoryLogger = new Mock<ILogger>();
         _mockAdcFactoryLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
-        _mockConfiguration = new Mock<IConfiguration>();
-        _mockAdcService = new Mock<IAdcConfigurationService>();
-
+        // Setup configuration mock
         var configSection = new Mock<IConfigurationSection>();
         configSection.Setup(x => x.Value).Returns(_testConfigPath);
-        configSection.Setup(x => x.Path).Returns("ConfigurationPath");
-        configSection.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
+        _mockConfiguration = new Mock<IConfiguration>();
         _mockConfiguration.Setup(x => x.GetSection("ConfigurationPath")).Returns(configSection.Object);
-        _mockConfiguration.Setup(x => x["ConfigurationPath"]).Returns(_testConfigPath);
 
+        _mockAdcService = new Mock<IAdcConfigurationService>();
         _mockAdc = new MockAdc();
         _mockAdcService
-            .Setup(x => x.GetAdcAsync())
-            .ReturnsAsync(_mockAdc);
+            .Setup(x => x.GetAdc())
+            .Returns(_mockAdc);
 
-        _sensorConfigService = new SensorConfigurationService(_mockLogger.Object, _mockConfiguration.Object);
+        _configRepository = new JsonConfigurationRepository(_mockLogger.Object, _mockConfiguration.Object);
+        _sensorConfigService = new SensorConfigurationService(_mockLogger.Object, _configRepository);
         _sensorReadingService = new SensorReadingService(_mockLogger.Object, _mockAdcService.Object, _sensorConfigService);
     }
 
@@ -63,7 +63,8 @@ public class SensorReadingServiceTests : IDisposable {
             if (disposing) {
                 _sensorReadingService?.Dispose();
                 _mockAdc?.Dispose();
-                _sensorConfigService.Dispose();
+                _sensorConfigService?.Dispose();
+                _configRepository?.Dispose();
             }
             if (Directory.Exists(_testDir)) {
                 Directory.Delete(_testDir, true);
@@ -151,9 +152,9 @@ public class SensorReadingServiceTests : IDisposable {
 
         _mockLogger.Verify(
             x => x.Log(
-            LogLevel.Error,
+                LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to load")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error loading configuration 'sensors'")),
                 It.Is<Exception>(ex => ex is JsonException),
                 (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()),
             Times.Once);

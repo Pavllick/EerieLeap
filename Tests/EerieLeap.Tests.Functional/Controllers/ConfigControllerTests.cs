@@ -12,7 +12,7 @@ namespace EerieLeap.Tests.Functional.Controllers;
 public class ConfigControllerTests : FunctionalTestBase {
     private readonly ITestOutputHelper _output;
 
-    public ConfigControllerTests(WebApplicationFactory<Program> factory, ITestOutputHelper output)
+    public ConfigControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory) {
         _output = output;
     }

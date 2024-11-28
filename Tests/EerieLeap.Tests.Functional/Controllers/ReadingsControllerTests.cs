@@ -1,8 +1,7 @@
+using System.Net;
 using EerieLeap.Tests.Functional.Infrastructure;
 using EerieLeap.Tests.Functional.Models;
 using EerieLeap.Types;
-using Microsoft.AspNetCore.Mvc.Testing;
-using System.Net;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,7 +11,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     private readonly ITestOutputHelper _output;
 
     public ReadingsControllerTests(
-        WebApplicationFactory<Program> factory,
+        TestWebApplicationFactory factory,
         ITestOutputHelper output) : base(factory) {
         _output = output;
     }
