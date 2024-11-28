@@ -14,7 +14,7 @@ public sealed class MockAdc : IAdc {
     public void Configure([Required] AdcConfig config) =>
         _config = config;
 
-    public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) {
+    public async Task<double> ReadChannelAsync([Required] int channel, CancellationToken cancellationToken = default) {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         if (_config == null)

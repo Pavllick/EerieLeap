@@ -99,20 +99,19 @@ public partial class SpiAdc : IAdc, IDisposable {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 1,
+    [LoggerMessage(Level = LogLevel.Information,
         Message = "Configured ADC: Type={type}, Bus={bus}, CS={cs}, Clock={clock}Hz, Mode={mode}, Resolution={resolution}bit")]
     private partial void LogConfiguration(
         string type, int bus, int cs, int clock, int mode, int resolution);
 
-    [LoggerMessage(Level = LogLevel.Debug, EventId = 2,
+    [LoggerMessage(Level = LogLevel.Debug,
         Message = "ADC Protocol: CommandPrefix={prefix}, ChannelMask={channelMask}, ResultMask={resultMask}, ReadBytes={readBytes}")]
     private partial void LogProtocol(
         string prefix, string channelMask, string resultMask, int readBytes);
 
-    [LoggerMessage(Level = LogLevel.Trace, EventId = 3,
+    [LoggerMessage(Level = LogLevel.Trace,
         Message = "Channel {channel}: Raw={raw}, Voltage={voltage:F3}V")]
-    private partial void LogChannelReading(
-        int channel, int raw, double voltage);
+    private partial void LogChannelReading(int channel, int raw, double voltage);
 
     #endregion
 }

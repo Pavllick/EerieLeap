@@ -16,7 +16,7 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService {
 
     private const string ConfigName = "adc";
 
-    public AdcConfigurationService(ILogger logger, AdcFactory adcFactory, IConfigurationRepository repository) {
+    public AdcConfigurationService(ILogger logger, [Required] AdcFactory adcFactory, [Required] IConfigurationRepository repository) {
         _logger = logger;
         _adcFactory = adcFactory;
         _repository = repository;
@@ -52,11 +52,11 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService {
     }
 
     private async Task LoadConfigurationAsync() {
-        var result = await _repository.LoadAsync<AdcConfig>(ConfigName);
+        var result = await _repository.LoadAsync<AdcConfig>(ConfigName).ConfigureAwait(false);
 
         if (!result.Success) {
             _config = CreateDefaultConfiguration();
-            await _repository.SaveAsync(ConfigName, _config);
+            await _repository.SaveAsync(ConfigName, _config).ConfigureAwait(false);
             return;
         }
 
@@ -90,13 +90,13 @@ public sealed partial class AdcConfigurationService : IAdcConfigurationService {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to load ADC configuration")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to load ADC configuration")]
     private partial void LogConfigurationLoadError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 2, Message = "Created default ADC configuration")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Created default ADC configuration")]
     private partial void LogDefaultConfigurationCreated();
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 3, Message = "Updated ADC configuration")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Updated ADC configuration")]
     private partial void LogConfigurationUpdated();
 
     #endregion

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
 using EerieLeap.Configuration;
 using EerieLeap.Types;
 using EerieLeap.Utilities;
@@ -13,7 +14,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
     private readonly ConcurrentDictionary<string, double> _lastReadings = new();
     private TaskCompletionSource<bool>? _initializationTcs;
 
-    public SensorReadingService(ILogger logger, IAdcConfigurationService adcService, ISensorConfigurationService sensorsConfigService) {
+    public SensorReadingService(ILogger logger, [Required] IAdcConfigurationService adcService, [Required] ISensorConfigurationService sensorsConfigService) {
         _logger = logger;
         _adcService = adcService;
         _sensorsConfigService = sensorsConfigService;
@@ -55,7 +56,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
         });
     }
 
-    public async Task<ReadingResult?> GetReadingAsync(string id) {
+    public async Task<ReadingResult?> GetReadingAsync([Required] string id) {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
         return _lastReadings.TryGetValue(id, out var value)
@@ -116,7 +117,7 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
             _lastReadings.AddOrUpdate(id, value, (_, _) => value);
     }
 
-    private static double ConvertVoltageToValue(double voltage, SensorConfig sensor) {
+    private static double ConvertVoltageToValue([Required] double voltage, [Required] SensorConfig sensor) {
         if (!string.IsNullOrEmpty(sensor.ConversionExpression)) {
             try {
                 return ExpressionEvaluator.Evaluate(sensor.ConversionExpression, voltage);
@@ -151,19 +152,19 @@ public sealed partial class SensorReadingService : BackgroundService, ISensorRea
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to update sensor readings")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor readings")]
     private partial void LogUpdateReadingsError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to read sensor {name}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to read sensor {name}")]
     private partial void LogReadSensorError(string name, Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 3, Message = "Failed to evaluate virtual sensor {name}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to evaluate virtual sensor {name}")]
     private partial void LogVirtualSensorError(string name, Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 4, Message = "Channel not specified for sensor {name}")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Channel not specified for sensor {name}")]
     private partial void LogChannelNotSpecified(string name, Exception? ex);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 5, Message = "Expression not specified for virtual sensor {name}")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Expression not specified for virtual sensor {name}")]
     private partial void LogExpressionNotSpecified(string name, Exception? ex);
 
     #endregion

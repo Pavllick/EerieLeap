@@ -36,7 +36,7 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
         Directory.CreateDirectory(_basePath);
     }
 
-    public async Task<ConfigurationResult<T>> LoadAsync<T>(string name) where T : class {
+    public async Task<ConfigurationResult<T>> LoadAsync<T>([Required] string name) where T : class {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         try {
@@ -60,7 +60,7 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
         }
     }
 
-    public async Task<ConfigurationResult<T>> SaveAsync<T>(string name, T config) where T : class {
+    public async Task<ConfigurationResult<T>> SaveAsync<T>([Required] string name, [Required] T config) where T : class {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         try {
@@ -78,14 +78,14 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
         }
     }
 
-    public async Task<bool> ExistsAsync(string name) {
+    public async Task<bool> ExistsAsync([Required] string name) {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
         return File.Exists(GetConfigPath(name));
     }
 
-    public async Task<bool> DeleteAsync(string name) {
+    public async Task<bool> DeleteAsync([Required] string name) {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         try {
@@ -104,7 +104,7 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
         }
     }
 
-    private string GetConfigPath(string name) =>
+    private string GetConfigPath([Required] string name) =>
         Path.Combine(_basePath, $"{name}.json");
 
     public void Dispose() {

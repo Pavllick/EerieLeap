@@ -53,13 +53,13 @@ public partial class AdcConfigController : ConfigControllerBase {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get ADC configuration")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get ADC configuration")]
     private partial void LogGetConfigurationError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to update ADC configuration")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update ADC configuration")]
     private partial void LogUpdateConfigurationError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 3, Message = "ADC configuration validation failed")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "ADC configuration validation failed")]
     private partial void LogValidationError(Exception ex);
 
     #endregion

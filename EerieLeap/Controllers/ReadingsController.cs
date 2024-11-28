@@ -33,7 +33,7 @@ public partial class ReadingsController : ControllerBase {
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ReadingResult>> GetReading(string id) {
+    public async Task<ActionResult<ReadingResult>> GetReading([FromRoute][Required] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
@@ -54,10 +54,10 @@ public partial class ReadingsController : ControllerBase {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get sensor readings")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor readings")]
     private partial void LogReadingsError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to get sensor reading for {id}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor reading for {id}")]
     private partial void LogReadingError(string id, Exception ex);
 
     #endregion

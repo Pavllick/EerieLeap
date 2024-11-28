@@ -71,7 +71,7 @@ public sealed class GlobalValidationFabric : ProjectFabric {
                 if (isRequired)
                     ArgumentNullException.ThrowIfNull(parameter.Value, parameter.Name);
 
-                if (parameter.Value != null) {
+                if (parameter.Type.IsReferenceType.GetValueOrDefault() && parameter.Value != null) {
                     Validator.ValidateObject(
                         parameter.Value,
                         new ValidationContext(parameter.Value) {
@@ -107,7 +107,7 @@ public sealed class GlobalValidationFabric : ProjectFabric {
                 if (isRequired)
                     ArgumentNullException.ThrowIfNull(parameter.Value, parameter.Name);
 
-                if (parameter.Value != null) {
+                if (parameter.Type.IsReferenceType.GetValueOrDefault() && parameter.Value != null) {
                     Validator.ValidateObject(
                         parameter.Value,
                         new ValidationContext(parameter.Value) {

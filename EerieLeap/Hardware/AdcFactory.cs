@@ -23,10 +23,10 @@ public sealed partial class AdcFactory {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 1, Message = "Creating ADC")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Creating ADC")]
     private partial void LogCreatingAdc();
 
-    [LoggerMessage(Level = LogLevel.Information, EventId = 2, Message = "Using mock ADC for testing")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Using mock ADC for testing")]
     private partial void LogUsingMockAdc();
 
     #endregion

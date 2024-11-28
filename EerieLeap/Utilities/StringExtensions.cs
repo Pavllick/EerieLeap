@@ -1,6 +1,6 @@
-namespace EerieLeap.Utilities;
-
 using System.Diagnostics.CodeAnalysis;
+
+namespace EerieLeap.Utilities;
 
 public static class StringExtensions {
 
@@ -21,8 +21,9 @@ public static class StringExtensions {
             // Handle transitions between acronyms and regular words
             if (currentIsUpper) {
                 // Start of new word (not in acronym)
-                if (!isInAcronym && !prevIsUpper)
+                if (!isInAcronym && !prevIsUpper) {
                     result += " ";
+                }
                 // End of acronym
                 else if (isInAcronym && !nextIsUpper && i + 1 < text.Length) {
                     result += " ";
@@ -35,8 +36,9 @@ public static class StringExtensions {
                     isInAcronym = true;
                 }
                 // Middle of acronym - just add space between letters
-                else if (isInAcronym)
+                else if (isInAcronym) {
                     result += " ";
+                }
             }
 
             result += char.ToLowerInvariant(text[i]);

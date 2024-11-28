@@ -16,7 +16,7 @@ public partial class SensorConfigurationService : ISensorConfigurationService {
 
     private const string ConfigName = "sensors";
 
-    public SensorConfigurationService(ILogger logger, IConfigurationRepository repository) {
+    public SensorConfigurationService(ILogger logger, [Required] IConfigurationRepository repository) {
         _logger = logger;
         _repository = repository;
     }
@@ -47,14 +47,9 @@ public partial class SensorConfigurationService : ISensorConfigurationService {
         return _configs.Values.ToList().AsReadOnly();
     }
 
-    public SensorConfig? GetConfiguration(string sensorId) {
+    public SensorConfig? GetConfiguration([Required] string sensorId) {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return _configs.TryGetValue(sensorId, out var config) ? config : null;
-    }
-
-    public bool TryGetConfiguration(string sensorId, out SensorConfig? config) {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        return _configs.TryGetValue(sensorId, out config);
     }
 
     public async Task<bool> UpdateConfigurationAsync([Required] IEnumerable<SensorConfig> configs) {

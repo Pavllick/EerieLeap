@@ -10,14 +10,16 @@ namespace EerieLeap.Utilities.DataAnnotations;
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class RequiredForVirtualSensorAttribute : ValidationAttribute {
     protected override ValidationResult? IsValid(object? value, [Required] ValidationContext validationContext) {
-        if (validationContext.ObjectInstance is not SensorConfig sensorConfig)
+        if (validationContext.ObjectInstance is not SensorConfig sensorConfig) {
             return new ValidationResult("This attribute can only be used on SensorConfig properties",
-                new[] { validationContext.MemberName ?? string.Empty });
+                [validationContext.MemberName ?? string.Empty]);
+        }
 
-        if (sensorConfig.Type == SensorType.Virtual && string.IsNullOrEmpty(value?.ToString()))
+        if (sensorConfig.Type == SensorType.Virtual && string.IsNullOrEmpty(value?.ToString())) {
             return new ValidationResult(
                 ErrorMessage ?? $"The {validationContext.DisplayName} field is required for virtual sensors.",
-                new[] { validationContext.MemberName ?? string.Empty });
+                [validationContext.MemberName ?? string.Empty]);
+        }
 
         return ValidationResult.Success;
     }

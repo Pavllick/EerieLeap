@@ -32,7 +32,7 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpGet("{id}")]
-    public ActionResult<SensorConfig> GetConfig([FromRoute] string id) {
+    public ActionResult<SensorConfig> GetConfig([FromRoute][Required] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
@@ -56,7 +56,7 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpPost]
-    public async Task<IActionResult> UpdateConfigsAsync([FromBody] IEnumerable<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateConfigsAsync([FromBody][Required] IEnumerable<SensorConfig> configs) {
         try {
             var configsList = configs.ToList();
 
@@ -86,13 +86,13 @@ public partial class SensorConfigController : ConfigControllerBase {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get sensor configurations")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor configurations")]
     private partial void LogConfigsError(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 2, Message = "Failed to get sensor configuration for Id {id}")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor configuration for Id {id}")]
     private partial void LogConfigError(string id, Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 3, Message = "Failed to update sensor configurations")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor configurations")]
     private partial void LogConfigsUpdateError(Exception ex);
 
     #endregion

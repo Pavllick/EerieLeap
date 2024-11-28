@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Utilities;
 
@@ -16,25 +17,17 @@ public static class IdGenerator {
         if (string.IsNullOrWhiteSpace(name))
             return GenerateRandomId(GeneratedIdLength);
 
-        // Convert to lowercase and trim
         var id = name.Trim().ToLowerInvariant();
-
-        // Replace multiple spaces with single space
         id = _multipleSpacesRegex.Replace(id, " ");
-
-        // Replace spaces with underscores
         id = id.Replace(' ', '_');
-
-        // Remove any other invalid characters
         id = _invalidCharsRegex.Replace(id, "");
 
-        // If after cleaning the ID is empty, generate a GUID-based one
         return string.IsNullOrEmpty(id)
             ? GenerateRandomId(GeneratedIdLength)
             : id;
     }
 
-    private static string GenerateRandomId(int length) {
+    private static string GenerateRandomId([Required] int length) {
         const string chars = "abcdef0123456789";
         using var rng = RandomNumberGenerator.Create();
         var buffer = new byte[length];

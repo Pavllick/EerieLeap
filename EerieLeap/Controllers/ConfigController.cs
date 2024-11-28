@@ -40,7 +40,7 @@ public partial class ConfigController : ConfigControllerBase {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, EventId = 1, Message = "Failed to get combined configuration")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get combined configuration")]
     private partial void LogConfigError(Exception ex);
 
     #endregion
