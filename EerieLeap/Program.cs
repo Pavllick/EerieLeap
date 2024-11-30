@@ -1,8 +1,11 @@
-using EerieLeap.Services;
-using EerieLeap.Hardware;
 using EerieLeap.Repositories;
 using System.Text.Json.Serialization;
 using EerieLeap.Configuration;
+using EerieLeap.Domain.AdcDomain.Services;
+using EerieLeap.Domain.AdcDomain.Hardware;
+using EerieLeap.Domain.SensorDomain.Services;
+using EerieLeap.Domain.SensorDomain.Processing;
+using EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 
 namespace EerieLeap;
 
@@ -34,6 +37,25 @@ public sealed class Program {
         // Register configuration services
         builder.Services.AddSingleton<IAdcConfigurationService, AdcConfigurationService>();
         builder.Services.AddSingleton<ISensorConfigurationService, SensorConfigurationService>();
+
+        // Register shared reading buffer
+        builder.Services.AddSingleton<SensorReadingBuffer>();
+
+        // Register SensorReading processors
+        // builder.Services.AddSingleton<BaseSensorReadingProcessor>();
+        builder.Services.AddSingleton<PhysicalSensorProcessor>();
+        builder.Services.AddSingleton<VirtualSensorProcessor>();
+        builder.Services.AddSingleton<SensorTypeRoutingProcessor>();
+
+        // Register the processor chain as ISensorReadingProcessor
+        builder.Services.AddSingleton<ISensorReadingProcessor>(sp => {
+            var routingProcessor = sp.GetRequiredService<SensorTypeRoutingProcessor>();
+            // var baseProcessor = sp.GetRequiredService<BaseSensorReadingProcessor>();
+            // return new SensorReadingChainedProcessor(routingProcessor, baseProcessor);
+            return new SensorReadingChainedProcessor(routingProcessor);
+        });
+
+        // Register SensorReadingService last since it depends on ISensorReadingProcessor
         builder.Services.AddSingleton<ISensorReadingService, SensorReadingService>();
         builder.Services.AddHostedService(sp => (SensorReadingService)sp.GetRequiredService<ISensorReadingService>());
 

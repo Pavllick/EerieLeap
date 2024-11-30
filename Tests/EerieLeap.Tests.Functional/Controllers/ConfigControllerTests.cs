@@ -1,8 +1,7 @@
 using EerieLeap.Configuration;
+using EerieLeap.Domain.SensorDomain.Models;
 using EerieLeap.Tests.Functional.Infrastructure;
 using EerieLeap.Tests.Functional.Models;
-using EerieLeap.Types;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using Xunit;
 using Xunit.Abstractions;

@@ -1,9 +1,8 @@
 using EerieLeap.Configuration;
-using EerieLeap.Services;
-using EerieLeap.Utilities;
+using EerieLeap.Domain.SensorDomain.Services;
+using EerieLeap.Domain.SensorDomain.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 namespace EerieLeap.Controllers;
 
@@ -19,15 +18,9 @@ public partial class SensorConfigController : ConfigControllerBase {
         try {
             var configs = _sensorConfigService.GetConfigurations();
             return Ok(configs);
-        } catch (JsonException ex) {
-            LogConfigsError(ex);
-            return StatusCode(500, "Invalid sensor configuration format");
-        } catch (IOException ex) {
-            LogConfigsError(ex);
-            return StatusCode(500, "Failed to read sensor configuration file");
-        } catch (InvalidOperationException ex) {
-            LogConfigsError(ex);
-            return StatusCode(500, "Sensor configuration is in an invalid state");
+        } catch (Exception ex) {
+            LogGetConfigsError(ex.Message);
+            return StatusCode(500, "Failed to retrieve sensor configurations");
         }
     }
 
@@ -43,57 +36,49 @@ public partial class SensorConfigController : ConfigControllerBase {
                 return NotFound($"Sensor configuration with Id '{id}' not found");
 
             return Ok(config);
-        } catch (JsonException ex) {
-            LogConfigError(id, ex);
-            return StatusCode(500, "Invalid sensor configuration format");
-        } catch (IOException ex) {
-            LogConfigError(id, ex);
-            return StatusCode(500, "Failed to read sensor configuration file");
-        } catch (InvalidOperationException ex) {
-            LogConfigError(id, ex);
-            return StatusCode(500, "Sensor configuration is in an invalid state");
+        } catch (Exception ex) {
+            LogGetConfigError(id, ex.Message);
+            return StatusCode(500, $"Failed to retrieve sensor configuration: {id}");
         }
     }
 
     [HttpPost]
-    public async Task<IActionResult> UpdateConfigsAsync([FromBody][Required] IEnumerable<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateConfigsAsync([FromBody] IEnumerable<SensorConfig> configs) {
         try {
-            var configsList = configs.ToList();
-
-            var seenIds = new HashSet<string>();
-            foreach (var config in configsList) {
-                if (!SensorIdValidator.IsValid(config.Id))
-                    return BadRequest($"Invalid sensor Id format: '{config.Id}'");
-
-                if (!seenIds.Add(config.Id))
-                    return BadRequest($"Duplicate sensor ID found: '{config.Id}'");
+            var result = await _sensorConfigService.UpdateConfigurationAsync(configs).ConfigureAwait(false);
+            if (!result.Success) {
+                return BadRequest(new {
+                    Message = "Failed to update sensor configurations",
+                    Errors = result.Errors.ToArray()
+                });
             }
 
-            await _sensorConfigService.UpdateConfigurationAsync(configsList).ConfigureAwait(false);
-
             return Ok();
-        } catch (JsonException ex) {
-            LogConfigsUpdateError(ex);
-            return StatusCode(500, "Failed to serialize sensor configurations");
-        } catch (IOException ex) {
-            LogConfigsUpdateError(ex);
-            return StatusCode(500, "Failed to write sensor configuration file");
-        } catch (ValidationException ex) {
-            LogConfigsUpdateError(ex);
-            return BadRequest(ex.Message);
+        } catch (Exception ex) {
+            LogUpdateConfigsError(ex.Message);
+            return StatusCode(500, "An unexpected error occurred while updating sensor configurations");
         }
     }
 
-    #region Loggers
+    #region Logging
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor configurations")]
-    private partial void LogConfigsError(Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to retrieve sensor configurations: {message}")]
+    private partial void LogGetConfigsError(string message);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to get sensor configuration for Id {id}")]
-    private partial void LogConfigError(string id, Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Sensor configuration not found: {sensorId}")]
+    private partial void LogSensorNotFound(string sensorId);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor configurations")]
-    private partial void LogConfigsUpdateError(Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to retrieve sensor configuration {sensorId}: {message}")]
+    private partial void LogGetConfigError(string sensorId, string message);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Validation error: {message}")]
+    private partial void LogValidationError(string message);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Configuration error: {message}")]
+    private partial void LogConfigurationError(string message);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor configurations: {message}")]
+    private partial void LogUpdateConfigsError(string message);
 
     #endregion
 }

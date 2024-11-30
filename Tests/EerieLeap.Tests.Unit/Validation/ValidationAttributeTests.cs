@@ -1,10 +1,10 @@
 using EerieLeap.Configuration;
-using EerieLeap.Types;
-using EerieLeap.Utilities.DataAnnotations;
+using EerieLeap.Domain.SensorDomain.Models;
+using EerieLeap.Domain.SensorDomain.DataAnnotations;
 using System.ComponentModel.DataAnnotations;
 using Xunit;
 
-namespace EerieLeap.Tests.Unit.Validation;
+namespace EerieLeap.Tests.Unit.Domain.SensorDomain.Validation;
 
 public class ValidationAttributeTests {
     [Fact]

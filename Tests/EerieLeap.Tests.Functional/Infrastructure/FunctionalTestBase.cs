@@ -60,6 +60,13 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
         return await response.Content.ReadFromJsonAsync<T>();
     }
 
+    protected async Task<string> Get2Async(string url) {
+        var response = await Client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStringAsync();
+    }
+
     protected async Task<HttpResponseMessage> GetWithFullResponse(string url) =>
         await Client.GetAsync(url);
 

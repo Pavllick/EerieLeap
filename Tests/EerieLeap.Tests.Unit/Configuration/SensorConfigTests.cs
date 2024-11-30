@@ -1,5 +1,5 @@
 using EerieLeap.Configuration;
-using EerieLeap.Types;
+using EerieLeap.Domain.SensorDomain.Models;
 using System.ComponentModel.DataAnnotations;
 using Xunit;
 

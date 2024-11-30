@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
 
-public class InMemoryConfigurationRepository : IConfigurationRepository, IDisposable {
+public partial class InMemoryConfigurationRepository : IConfigurationRepository, IDisposable {
     private readonly ILogger _logger;
     private readonly ConcurrentDictionary<string, string> _configurations;
     private readonly JsonSerializerOptions _readOptions;
@@ -34,19 +34,19 @@ public class InMemoryConfigurationRepository : IConfigurationRepository, IDispos
     public Task<ConfigurationResult<T>> LoadAsync<T>(string name) where T : class {
         try {
             if (!_configurations.TryGetValue(name, out var json)) {
-                _logger.LogWarning("Configuration '{Name}' not found", name);
+                LogConfigNotFound(name);
                 return Task.FromResult(new ConfigurationResult<T>(false, Error: $"Configuration '{name}' not found"));
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _readOptions);
             if (config == null) {
-                _logger.LogError("Failed to deserialize configuration '{Name}'", name);
+                LogDeserializationFailed(name);
                 return Task.FromResult(new ConfigurationResult<T>(false, Error: $"Failed to deserialize configuration '{name}'"));
             }
 
             return Task.FromResult(new ConfigurationResult<T>(true, config));
         } catch (Exception ex) {
-            _logger.LogError(ex, "Error loading configuration '{Name}'", name);
+            LogLoadError(name, ex);
             return Task.FromResult(new ConfigurationResult<T>(false, Error: ex.Message));
         }
     }
@@ -55,10 +55,10 @@ public class InMemoryConfigurationRepository : IConfigurationRepository, IDispos
         try {
             var json = JsonSerializer.Serialize(config, _writeOptions);
             _configurations[name] = json;
-            _logger.LogInformation("Saved configuration '{Name}'", name);
+            LogConfigSaved(name);
             return Task.FromResult(new ConfigurationResult<T>(true, config));
         } catch (Exception ex) {
-            _logger.LogError(ex, "Error saving configuration '{Name}'", name);
+            LogSaveError(name, ex);
             return Task.FromResult(new ConfigurationResult<T>(false, Error: ex.Message));
         }
     }
@@ -79,4 +79,21 @@ public class InMemoryConfigurationRepository : IConfigurationRepository, IDispos
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    #region Loggers
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Configuration '{name}' not found")]
+    private partial void LogConfigNotFound(string name);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to deserialize configuration '{name}'")]
+    private partial void LogDeserializationFailed(string name);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error loading configuration '{name}'")]
+    private partial void LogLoadError(string name, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Saved configuration '{name}'")]
+    private partial void LogConfigSaved(string name);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error saving configuration '{name}'")]
+    private partial void LogSaveError(string name, Exception ex);
+    #endregion
 }

@@ -29,7 +29,7 @@ public class ExpressionEvaluatorTests {
                                   .ToDictionary(x => x.id, x => x.value);
 
         // Act
-        var result = ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues);
+        var result = ExpressionEvaluator.Evaluate(expression, sensorValues);
 
         // Assert
         Assert.Equal(expected, result, 6);
@@ -69,7 +69,7 @@ public class ExpressionEvaluatorTests {
                                   .ToDictionary(x => x.id, x => x.value);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
+        Assert.Throws<ArgumentException>(() => ExpressionEvaluator.Evaluate(expression, sensorValues));
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class ExpressionEvaluatorTests {
         const string expression = "1 + 2";
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => ExpressionEvaluator.EvaluateWithSensors(expression, null!));
+        Assert.Throws<ArgumentNullException>(() => ExpressionEvaluator.Evaluate(expression, null!));
     }
 
     // TODO: Uncomment when validations are implemented
@@ -92,7 +92,7 @@ public class ExpressionEvaluatorTests {
         var sensorValues = new Dictionary<string, double> { { "sensor1", 1.0 } };
 
         // Act & Assert
-        var ex = Assert.ThrowsAny<Exception>(() => ExpressionEvaluator.EvaluateWithSensors(expression, sensorValues));
+        var ex = Assert.ThrowsAny<Exception>(() => ExpressionEvaluator.Evaluate(expression, sensorValues));
         Assert.IsType(exceptionType, ex);
         Assert.Contains("expression", ex.Message, StringComparison.OrdinalIgnoreCase);
     }

@@ -1,4 +1,5 @@
-using EerieLeap.Services;
+using EerieLeap.Domain.AdcDomain.Services;
+using EerieLeap.Domain.SensorDomain.Services;
 using EerieLeap.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;

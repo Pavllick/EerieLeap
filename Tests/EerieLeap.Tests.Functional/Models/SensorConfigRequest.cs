@@ -1,4 +1,4 @@
-using EerieLeap.Types;
+using EerieLeap.Domain.SensorDomain.Models;
 
 namespace EerieLeap.Tests.Functional.Models;
 

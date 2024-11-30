@@ -1,9 +1,9 @@
-using EerieLeap.Services;
-using EerieLeap.Types;
-using EerieLeap.Utilities;
+using EerieLeap.Domain.SensorDomain.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
+using EerieLeap.Domain.SensorDomain.Services;
+using EerieLeap.Domain.SensorDomain.Utilities;
 
 namespace EerieLeap.Controllers;
 
@@ -19,7 +19,7 @@ public partial class ReadingsController : ControllerBase {
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ReadingResult>>> GetReadings() {
+    public async Task<ActionResult<IEnumerable<SensorReading>>> GetReadingsAsync() {
         try {
             var readings = await _sensorService.GetReadingsAsync().ConfigureAwait(false);
             return Ok(readings);
@@ -33,7 +33,7 @@ public partial class ReadingsController : ControllerBase {
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ReadingResult>> GetReading([FromRoute][Required] string id) {
+    public async Task<ActionResult<SensorReading>> GetReadingAsync([FromRoute][Required] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");

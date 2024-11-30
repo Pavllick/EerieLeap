@@ -1,7 +1,7 @@
 using System.Net;
+using EerieLeap.Domain.SensorDomain.Models;
 using EerieLeap.Tests.Functional.Infrastructure;
 using EerieLeap.Tests.Functional.Models;
-using EerieLeap.Types;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,7 +19,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_ReturnsSuccessStatusCode() {
         // Act
-        var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
+        var readings = await GetAsync<IEnumerable<SensorReading>>("api/v1/readings");
 
         // Assert
         Assert.NotNull(readings);
@@ -39,7 +39,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
         await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { config1, config2 });
 
         // Act
-        var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
+        var readings = await GetAsync<IEnumerable<SensorReading>>("api/v1/readings");
 
         // Assert
         Assert.NotNull(readings);
@@ -72,7 +72,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
         await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { physicalConfig, virtualConfig });
 
         // Act
-        var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
+        var readings = await GetAsync<IEnumerable<SensorReading>>("api/v1/readings");
 
         // Assert
         Assert.NotNull(readings);
@@ -101,7 +101,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
         await PostSensorConfigsWithDelay(configs);
 
         // Act
-        var readings = await GetAsync<IEnumerable<ReadingResult>>("api/v1/readings");
+        var readings = await GetAsync<IEnumerable<SensorReading>>("api/v1/readings");
 
         // Assert
         Assert.NotNull(readings);
@@ -118,7 +118,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
-            await GetAsync<ReadingResult>($"api/v1/readings/{sensorId}"));
+            await GetAsync<SensorReading>($"api/v1/readings/{sensorId}"));
 
         Assert.Contains("404", exception.Message);
     }
@@ -140,7 +140,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
         await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { config });
 
         // Act
-        var response = await GetAsync<ReadingResult>($"api/v1/readings/{config.Id}");
+        var response = await GetAsync<SensorReading>($"api/v1/readings/{config.Id}");
 
         // Assert
         Assert.NotNull(response);

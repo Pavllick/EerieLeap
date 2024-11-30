@@ -12,19 +12,16 @@ public static class ExpressionEvaluator {
         expr.Parameters["E"] = Math.E;
     }
 
-    public static double Evaluate(string expression, double x) {
-        var expr = new Expression(UnwrapVariables(expression));
-        expr.Parameters["x"] = x;
-        AddMathConstants(expr);
+    public static double Evaluate(string expression, double x, Dictionary<string, double>? sensorValues = null) {
+        if (string.IsNullOrWhiteSpace(expression))
+            return x;
 
-        var result = expr.Evaluate();
-        if (result is double d)
-            return d;
-
-        throw new InvalidOperationException($"Expression evaluation did not return a number: {result}");
+        return Evaluate(expression, new Dictionary<string, double>(sensorValues ?? new Dictionary<string, double>()) {
+            { "x", x }
+        });
     }
 
-    public static double EvaluateWithSensors([Required] string expression, [Required] Dictionary<string, double> sensorValues) {
+    public static double Evaluate([Required] string expression, [Required] Dictionary<string, double> sensorValues) {
         var expr = new Expression(UnwrapVariables(expression));
         AddMathConstants(expr);
 
