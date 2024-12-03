@@ -255,23 +255,39 @@ public class ConfigControllerTests : FunctionalTestBase {
         Assert.Contains("Name", content);
     }
 
-    // TODO: Bug, returns config field is missing, which is a parameter name in the controller POST method
-    // [Fact]
-    // public async Task UpdateSensorConfigs_WithInvalidConfigWithJson_ReturnsBadRequest2() {
-    //     // Arrange
-    //     var jsonContent = @"[{
-    //         ""id"": ""invalid_sensor"",
-    //         ""type"": ""Temperature""
-    //     }]";
+    [Fact]
+    public async Task UpdateSensorConfigs_WithInvalidConfigWithJsonThatThrowsException_ReturnsBadRequest() {
+        // Arrange
+        var jsonContent = @"[{
+            ""id"": ""invalid_sensor"",
+            ""type"": ""Temperature""
+        }]";
 
-    //     // Act
-    //     var response = await PostWithFullResponse("api/v1/config/sensors", jsonContent);
+        // Act
+        var response = await PostWithFullResponse("api/v1/config/sensors", jsonContent);
 
-    //     // Assert
-    //     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    //     var content = await response.Content.ReadAsStringAsync();
-    //     Assert.Contains("Name", content);
-    // }
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Invalid SensorType 'Temperature'", content);
+    }
+
+    [Fact]
+    public async Task UpdateSensorConfigs_WithInvalidConfigWithIncorrectJsonFormat_ReturnsBadRequest() {
+        // Arrange
+        var jsonContent = @"[{
+            ""id"": ""invalid_sensor"",
+            ""type"": ""Physical"",
+        ]";
+
+        // Act
+        var response = await PostWithFullResponse("api/v1/config/sensors", jsonContent);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("The request contains invalid JSON format", content);
+    }
 
     [Fact]
     public async Task UpdateSensorConfigs_WithDuplicateIds_ReturnsBadRequest() {

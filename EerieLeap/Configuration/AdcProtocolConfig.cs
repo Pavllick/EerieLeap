@@ -6,19 +6,19 @@ namespace EerieLeap.Configuration;
 
 public class AdcProtocolConfig {
     [Required]
-    [JsonConverter(typeof(HexByteArrayConverter))]
+    [JsonConverter(typeof(HexByteArrayJsonConverter))]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "Irrelevant for configuration")]
     public byte[]? CommandPrefix { get; set; }
 
     [Required]
-    [JsonConverter(typeof(HexNumberConverter<byte>))]
+    [JsonConverter(typeof(HexNumberJsonConverter<byte>))]
     public byte? ChannelMask { get; set; }
 
     [Required]
     public int? ChannelBitShift { get; set; }
 
     [Required]
-    [JsonConverter(typeof(HexNumberConverter<int>))]
+    [JsonConverter(typeof(HexNumberJsonConverter<int>))]
     public int? ResultBitMask { get; set; }
 
     [Required]

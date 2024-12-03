@@ -7,15 +7,15 @@ namespace EerieLeap.Tests.Functional.Models;
 /// Test request model that mirrors AdcProtocolConfig for testing validation scenarios.
 /// </summary>
 public record AdcProtocolConfigRequest {
-    [JsonConverter(typeof(HexByteArrayConverter))]
+    [JsonConverter(typeof(HexByteArrayJsonConverter))]
     public byte[]? CommandPrefix { get; init; }
 
-    [JsonConverter(typeof(HexNumberConverter<byte>))]
+    [JsonConverter(typeof(HexNumberJsonConverter<byte>))]
     public byte? ChannelMask { get; init; }
 
     public int? ChannelBitShift { get; init; }
 
-    [JsonConverter(typeof(HexNumberConverter<int>))]
+    [JsonConverter(typeof(HexNumberJsonConverter<int>))]
     public int? ResultBitMask { get; init; }
 
     public int? ResultBitShift { get; init; }

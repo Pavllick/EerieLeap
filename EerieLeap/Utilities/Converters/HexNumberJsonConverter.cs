@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Utilities.Converters;
 
-public sealed class HexNumberConverter<T> : JsonConverter<T> where T : struct {
+public sealed class HexNumberJsonConverter<T> : JsonConverter<T> where T : struct {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType == JsonTokenType.String) {
             string? hex = reader.GetString();
@@ -20,9 +20,9 @@ public sealed class HexNumberConverter<T> : JsonConverter<T> where T : struct {
             try {
                 // Parse hex string to number
                 if (typeof(T) == typeof(byte))
-                    return (T)(object)byte.Parse(hex, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    return (T)(object)byte.Parse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 if (typeof(T) == typeof(int))
-                    return (T)(object)int.Parse(hex, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    return (T)(object)int.Parse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
                 throw new JsonException($"Unsupported type for hex conversion: {typeof(T)}");
             } catch (FormatException) {

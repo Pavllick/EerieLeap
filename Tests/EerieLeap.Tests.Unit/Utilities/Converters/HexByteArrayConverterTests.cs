@@ -13,7 +13,7 @@ public class HexByteArrayConverterTests {
     }
 
     private class TestClass {
-        [JsonConverter(typeof(HexByteArrayConverter))]
+        [JsonConverter(typeof(HexByteArrayJsonConverter))]
         public byte[]? Data { get; set; }
     }
 

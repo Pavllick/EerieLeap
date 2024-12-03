@@ -1,6 +1,7 @@
 using EerieLeap.Repositories;
 using System.Text.Json.Serialization;
 using EerieLeap.Configuration;
+using EerieLeap.Controllers.Filters;
 using EerieLeap.Domain.AdcDomain.Services;
 using EerieLeap.Domain.AdcDomain.Hardware;
 using EerieLeap.Domain.SensorDomain.Services;
@@ -15,12 +16,16 @@ public sealed class Program {
 
         // Add services to the container.
         builder.Services
-            .AddControllers()
+            .AddControllers(options =>
+                options.Filters.Add<ValidationExceptionFilter>())
             .AddJsonOptions(options => {
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.IncludeFields = true;
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 options.JsonSerializerOptions.WriteIndented = true;
+            })
+            .ConfigureApiBehaviorOptions(options => {
+                options.SuppressModelStateInvalidFilter = true;
             });
 
         // Register services
