@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -26,8 +26,11 @@ jobs:
 
     - name: Restore dependencies
       run: msbuild /t:Restore
+      
+    - name: Build Weavers
+      run: msbuild Weavers/Weavers.csproj
 
-    - name: Build
+    - name: Build Project
       run: msbuild
 
     - name: Run Unit Tests
