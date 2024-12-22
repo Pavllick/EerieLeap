@@ -28,7 +28,7 @@ jobs:
       run: msbuild /t:Restore
 
     - name: Build
-      run: msbuild /p:Configuration=Development
+      run: msbuild
 
     - name: Run Unit Tests
       run: dotnet test Tests/EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal
