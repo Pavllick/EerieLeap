@@ -1,7 +1,7 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET
+name: .NET with MSBuild
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -21,11 +21,14 @@ jobs:
       with:
         dotnet-version: 8.0.203
 
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: msbuild /t:Restore
 
     - name: Build
-      run: dotnet build --no-restore
+      run: msbuild /p:Configuration=Development
 
     - name: Run Unit Tests
       run: dotnet test Tests/EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal
