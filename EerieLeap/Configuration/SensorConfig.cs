@@ -6,6 +6,7 @@ using EerieLeap.Utilities.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
+[IgnoreCustomValidation]
 public class SensorConfig {
     private string _name = string.Empty;
 

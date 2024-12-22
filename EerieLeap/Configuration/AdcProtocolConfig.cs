@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using EerieLeap.Utilities.Converters;
+using EerieLeap.Utilities.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
+[IgnoreCustomValidation]
 public class AdcProtocolConfig {
     [Required]
     [JsonConverter(typeof(HexByteArrayJsonConverter))]

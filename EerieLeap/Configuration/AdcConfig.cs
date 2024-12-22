@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Device.Spi;
+using EerieLeap.Utilities.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
+[IgnoreCustomValidation]
 public class AdcConfig {
     [Required]
     [MinLength(1)]
