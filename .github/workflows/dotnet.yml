@@ -15,14 +15,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.203
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+    - name: Set up Mono for MSBuild
+      run: |
+        sudo apt update
+        sudo apt install -y mono-complete
+        msbuild -version
 
     - name: Restore dependencies
       run: msbuild /t:Restore
