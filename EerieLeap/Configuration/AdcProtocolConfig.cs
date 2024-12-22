@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using EerieLeap.Utilities.Converters;
-using EerieLeap.Utilities.DataAnnotations;
+using Weavers.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 

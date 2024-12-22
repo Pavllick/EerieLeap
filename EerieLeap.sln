@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap", "EerieLeap\EerieLeap.csproj", "{78CDA9FD-41C1-45E5-AFCC-188C25A4C5B7}"
-	ProjectSection(ProjectDependencies) = postProject
-		{12AD14DE-366D-4D2D-922A-051E6FBE5D4D} = {12AD14DE-366D-4D2D-922A-051E6FBE5D4D}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap.Tests.Unit", "Tests\EerieLeap.Tests.Unit\EerieLeap.Tests.Unit.csproj", "{C8CDA9FD-41C1-45E5-AFCC-188C25A4C5B9}"
 EndProject

@@ -3,6 +3,7 @@ using EerieLeap.Domain.SensorDomain.DataAnnotations;
 using EerieLeap.Domain.SensorDomain.Models;
 using EerieLeap.Utilities;
 using EerieLeap.Utilities.DataAnnotations;
+using Weavers.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 

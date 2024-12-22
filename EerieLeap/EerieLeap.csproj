@@ -28,7 +28,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="System.Device.Gpio" Version="3.2.0" />
     <ProjectReference Include="..\Weavers\Weavers.csproj" />
-    <WeaverFiles Include="$(SolutionDir)Weavers\bin\$(Configuration)\netstandard2.0\Weavers.dll" WeaverClassNames="ValidationWeaver" />
+    <WeaverFiles Include="$(SolutionDir)Weavers\bin\$(Configuration)\net472\Weavers.dll" WeaverClassNames="ValidationWeaver" />
   </ItemGroup>
 
 </Project>

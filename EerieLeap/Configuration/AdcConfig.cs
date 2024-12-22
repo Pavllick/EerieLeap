@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Device.Spi;
-using EerieLeap.Utilities.DataAnnotations;
+using Weavers.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 

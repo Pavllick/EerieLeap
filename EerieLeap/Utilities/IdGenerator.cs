@@ -27,7 +27,7 @@ public static class IdGenerator {
             : id;
     }
 
-    private static string GenerateRandomId([Required] int length) {
+    private static string GenerateRandomId(int length) {
         const string chars = "abcdef0123456789";
         using var rng = RandomNumberGenerator.Create();
         var buffer = new byte[length];

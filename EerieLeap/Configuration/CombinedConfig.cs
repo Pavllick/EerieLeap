@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using EerieLeap.Utilities.DataAnnotations;
+using Weavers.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 
