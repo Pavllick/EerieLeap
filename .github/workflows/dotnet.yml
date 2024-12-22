@@ -19,22 +19,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.203
-
-    - name: Set up Mono for MSBuild
-      run: |
-        sudo apt update
-        sudo apt install -y mono-complete
-        msbuild -version
+        dotnet-version: 9.0.100
 
     - name: Restore dependencies
-      run: msbuild /t:Restore
+      run: dotnet restore
       
-    - name: Build Weavers
-      run: msbuild Weavers/Weavers.csproj
-
-    - name: Build Project
-      run: msbuild
+    - name: Build
+      run: dotnet build --no-restore
 
     - name: Run Unit Tests
       run: dotnet test Tests/EerieLeap.Tests.Unit/EerieLeap.Tests.Unit.csproj --no-build --verbosity normal

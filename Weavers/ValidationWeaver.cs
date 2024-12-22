@@ -91,45 +91,30 @@ public class ValidationWeaver : BaseModuleWeaver {
             attribute.AttributeType.Resolve().BaseType?.FullName,
             StringComparison.InvariantCulture);
 
-    /// <summary>
-    /// Injects argument null validation logic at the beginning of the method.
-    /// </summary>
-    /// <param name="il"></param>
-    /// <param name="firstInstruction"></param>
-    /// <param name="param"></param>
     private void InjectRequiredParameterValidation(ILProcessor il, Instruction firstInstruction, ParameterDefinition param) {
-        // Emit: if (param == null) throw new ArgumentNullException(nameof(param));
-
+        // Ensure the parameter is nullable
         if (!IsNullableType(param.ParameterType))
             return;
 
-        // Load the parameter onto the stack
+        // Emit: ArgumentNullException.ThrowIfNull(param, nameof(param));
+
+        // Load the parameter (arg0, arg1, etc.) onto the stack
         il.InsertBefore(firstInstruction, il.Create(OpCodes.Ldarg, param));
 
-        // Compare parameter with null
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Ldnull));
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Ceq)); // Compare equality
+        // Load the parameter name (string) onto the stack
+        il.InsertBefore(firstInstruction, il.Create(OpCodes.Ldstr, param.Name));
 
-        // Branch to the next instruction if not null
-        var skipThrowInstruction = il.Create(OpCodes.Nop);
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Brfalse_S, skipThrowInstruction));
-
-        // Throw new ArgumentNullException(nameof(param))
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Ldstr, param.Name)); // nameof(param)
-        var ctor = GetArgumentNullExceptionConstructorReference();
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Newobj, ctor)); // Create ArgumentNullException
-        il.InsertBefore(firstInstruction, il.Create(OpCodes.Throw)); // Throw the exception
-
-        // Add the skip instruction
-        il.InsertBefore(firstInstruction, skipThrowInstruction);
+        // Call ArgumentNullException.ThrowIfNull(param, paramName)
+        var throwIfNullMethod = GetThrowIfNullMethodReference();
+        il.InsertBefore(firstInstruction, il.Create(OpCodes.Call, throwIfNullMethod));
     }
 
-    private MethodReference GetArgumentNullExceptionConstructorReference() {
-        var exceptionType = ModuleDefinition.ImportReference(typeof(ArgumentNullException));
-
-        return ModuleDefinition.ImportReference(exceptionType.Resolve().Methods
-            .First(m => m.IsConstructor && m.Parameters.Count == 1 && m.Parameters[0].ParameterType.FullName == "System.String"));
-    }
+    private MethodReference GetThrowIfNullMethodReference() =>
+        ModuleDefinition.ImportReference(typeof(ArgumentNullException).GetMethods()
+            .First(m => m.Name == "ThrowIfNull"
+                && m.GetParameters().Length == 2
+                && m.GetParameters()[0].ParameterType.FullName == "System.Object"
+                && m.GetParameters()[1].ParameterType.FullName == "System.String"));
 
     private void InjectObjectValidation(ILProcessor il, Instruction firstInstruction, ParameterDefinition parameter) {
         // Step 1: Load the parameter onto the stack
