@@ -7,19 +7,10 @@
     <AnalysisMode>All</AnalysisMode>
     <UserSecretsId>dotnet-EerieLeap-a6b9a352-89bf-4dee-8bc7-ce2c6af99db3</UserSecretsId>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <MetalamaEmitCompilerTransformedFiles>true</MetalamaEmitCompilerTransformedFiles>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="FodyWeavers.xsd" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CoreCLR-NCalc" Version="3.1.253" />
-    <PackageReference Include="Fody" Version="6.9.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -27,8 +18,16 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="System.Device.Gpio" Version="3.2.0" />
-    <ProjectReference Include="..\Weavers\Weavers.csproj" />
-    <WeaverFiles Include="$(SolutionDir)Weavers\bin\$(Configuration)\netstandard2.0\Weavers.dll" WeaverClassNames="ValidationWeaver" />
+    <ProjectReference Include="..\ValidationProcessor\ValidationProcessor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <Target Name="InjectIL" AfterTargets="Build">
+    <Exec Command="dotnet run --project ../ValidationProcessor $(TargetPath) $(TargetPath).modified" />
+    <Copy SourceFiles="$(TargetPath).modified" DestinationFiles="$(TargetPath)" OverwriteReadOnlyFiles="true" />
+    <Delete Files="$(TargetPath).modified" />
+  </Target>
 </Project>

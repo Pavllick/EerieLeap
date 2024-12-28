@@ -1,16 +1,17 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
-namespace Weavers;
+namespace ValidationProcessor;
 
-public class ValidationWeaver : BaseModuleWeaver {
-    public override void Execute() {
+public class AssemblyValidator {
+    public ModuleDefinition ModuleDefinition { get; }
+
+    public AssemblyValidator(ModuleDefinition moduleDefinition) =>
+        ModuleDefinition = moduleDefinition;
+
+    public void Execute() {
         foreach (var type in ModuleDefinition.Types.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.FullName.Contains("IgnoreCustomValidation"))))
             ProcessType(type);
     }
@@ -56,7 +57,7 @@ public class ValidationWeaver : BaseModuleWeaver {
         var il = property.SetMethod.Body.GetILProcessor();
         var firstInstruction = property.SetMethod.Body.Instructions.First();
 
-        if(property.CustomAttributes.Any(IsRequiredAttribute))
+        if (property.CustomAttributes.Any(IsRequiredAttribute))
             InjectRequiredParameterValidation(il, firstInstruction, property.SetMethod.Parameters.First());
 
         var valueParameter = property.SetMethod.Parameters.First();
@@ -79,15 +80,30 @@ public class ValidationWeaver : BaseModuleWeaver {
         InjectFieldValidation(il, firstInstruction, field);
     }
 
-    private bool IsRequiredAttribute(CustomAttribute attribute) =>
-        string.Equals(
+    //private bool IsRequiredAttribute(CustomAttribute attribute) =>
+    //    string.Equals(
+    //        //ModuleDefinition.ImportReference(typeof(RequiredAttribute)).Resolve().FullName,
+    //        //"System.ComponentModel.DataAnnotations.RequiredAttribute",
+    //        typeof(RequiredAttribute).FullName,
+    //        attribute.AttributeType.FullName,
+    //        StringComparison.InvariantCulture);
+
+    private bool IsRequiredAttribute(CustomAttribute attribute) {
+        //WriteMessage("Weaving method: " + typeof(RequiredAttribute).FullName + " != " + attribute.AttributeType.FullName, MessageImportance.High);
+
+        return string.Equals(
             ModuleDefinition.ImportReference(typeof(RequiredAttribute)).Resolve().FullName,
+            //"System.ComponentModel.DataAnnotations.RequiredAttribute",
+            //typeof(RequiredAttribute).FullName,
             attribute.AttributeType.FullName,
             StringComparison.InvariantCulture);
+    }
 
     private bool IsValidationAttribute(CustomAttribute attribute) =>
         string.Equals(
             ModuleDefinition.ImportReference(typeof(ValidationAttribute)).Resolve().FullName,
+            //"System.ComponentModel.DataAnnotations.ValidationAttribute",
+            //typeof(ValidationAttribute).FullName,
             attribute.AttributeType.Resolve().BaseType?.FullName,
             StringComparison.InvariantCulture);
 
@@ -194,6 +210,4 @@ public class ValidationWeaver : BaseModuleWeaver {
         type.IsValueType
             ? type.IsGenericInstance && type.FullName.StartsWith("System.Nullable`1")
             : true;
-
-    public override IEnumerable<string> GetAssembliesForScanning() => ["System.ComponentModel.Annotations"]; // Array.Empty<string>();
 }

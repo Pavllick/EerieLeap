@@ -33,7 +33,7 @@ public partial class ReadingsController : ControllerBase {
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<SensorReading>> GetReadingAsync([FromRoute][Required] string id) {
+    public async Task<ActionResult<SensorReading>> GetReadingAsync([Required] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");

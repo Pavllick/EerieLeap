@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Weavers.DataAnnotations;
+using ValidationProcessor.DataAnnotations;
 
 namespace EerieLeap.Configuration;
 

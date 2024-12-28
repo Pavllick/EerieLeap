@@ -25,7 +25,7 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpGet("{id}")]
-    public ActionResult<SensorConfig> GetConfig([FromRoute][Required] string id) {
+    public ActionResult<SensorConfig> GetConfig([Required] string id) {
         try {
             if (!SensorIdValidator.IsValid(id))
                 return BadRequest($"Invalid sensor Id format: '{id}'");
@@ -43,7 +43,7 @@ public partial class SensorConfigController : ConfigControllerBase {
     }
 
     [HttpPost]
-    public async Task<IActionResult> UpdateConfigsAsync([FromBody] IEnumerable<SensorConfig> configs) {
+    public async Task<IActionResult> UpdateConfigsAsync(IEnumerable<SensorConfig> configs) {
         try {
             var result = await _sensorConfigService.UpdateConfigurationAsync(configs).ConfigureAwait(false);
             if (!result.Success) {
