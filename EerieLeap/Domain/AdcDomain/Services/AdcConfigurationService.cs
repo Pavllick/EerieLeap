@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Domain.AdcDomain.Services;
 
-public sealed partial class AdcConfigurationService : IAdcConfigurationService {
+internal sealed partial class AdcConfigurationService : IAdcConfigurationService {
     private readonly ILogger _logger;
     private readonly AdcFactory _adcFactory;
     private readonly IConfigurationRepository _repository;

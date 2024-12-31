@@ -8,7 +8,7 @@ using EerieLeap.Domain.SensorDomain.Models;
 
 namespace EerieLeap.Domain.SensorDomain.Services;
 
-public partial class SensorConfigurationService : ISensorConfigurationService {
+internal partial class SensorConfigurationService : ISensorConfigurationService {
     private const string ConfigName = "sensors";
     private readonly ILogger _logger;
     private readonly IConfigurationRepository _repository;

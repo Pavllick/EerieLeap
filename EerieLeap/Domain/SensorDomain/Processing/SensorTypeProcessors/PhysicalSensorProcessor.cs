@@ -6,7 +6,7 @@ using EerieLeap.Domain.AdcDomain.Services;
 
 namespace EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 
-public partial class PhysicalSensorProcessor : ISensorReadingProcessor {
+internal partial class PhysicalSensorProcessor : ISensorReadingProcessor {
     private readonly IAdcConfigurationService _adcService;
     private readonly ILogger _logger;
     private readonly SensorReadingBuffer _buffer;

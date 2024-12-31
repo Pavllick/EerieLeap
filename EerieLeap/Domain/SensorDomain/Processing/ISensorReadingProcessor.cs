@@ -2,6 +2,6 @@ using EerieLeap.Domain.SensorDomain.Models;
 
 namespace EerieLeap.Domain.SensorDomain.Processing;
 
-public interface ISensorReadingProcessor {
+internal interface ISensorReadingProcessor {
     Task ProcessReadingAsync(SensorReading reading);
 }

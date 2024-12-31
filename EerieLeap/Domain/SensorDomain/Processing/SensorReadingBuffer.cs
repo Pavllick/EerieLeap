@@ -4,7 +4,7 @@ using EerieLeap.Domain.SensorDomain.Models;
 
 namespace EerieLeap.Domain.SensorDomain.Processing;
 
-public class SensorReadingBuffer {
+internal class SensorReadingBuffer {
     private readonly ConcurrentDictionary<string, SensorReading> _lastReadings = new();
 
     public void AddReading([Required] SensorReading reading) =>

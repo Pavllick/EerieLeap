@@ -4,7 +4,7 @@ using EerieLeap.Utilities;
 
 namespace EerieLeap.Domain.SensorDomain.Utilities;
 
-public class SensorDependencyResolver {
+internal class SensorDependencyResolver {
     private readonly Dictionary<string, HashSet<string>> _dependencies = new();
     private readonly Dictionary<string, Sensor> _sensors = new();
 

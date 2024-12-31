@@ -25,6 +25,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
         Assert.NotNull(readings);
     }
 
+    // TODO: Sometimes fails
     [Fact]
     public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings() {
         // Arrange

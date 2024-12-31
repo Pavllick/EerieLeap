@@ -7,6 +7,7 @@ using EerieLeap.Domain.AdcDomain.Hardware;
 using EerieLeap.Domain.SensorDomain.Services;
 using EerieLeap.Domain.SensorDomain.Processing;
 using EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
+using Microsoft.AspNetCore.Builder;
 
 namespace EerieLeap;
 
@@ -82,8 +83,8 @@ public sealed class Program {
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
-        app.UseAuthorization();
+        //app.UseHttpsRedirection();
+        //app.UseAuthorization();
         app.MapControllers();
 
         app.Run();

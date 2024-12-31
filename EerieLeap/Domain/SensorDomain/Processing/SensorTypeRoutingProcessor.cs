@@ -4,7 +4,7 @@ using EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 
 namespace EerieLeap.Domain.SensorDomain.Processing;
 
-public class SensorTypeRoutingProcessor : ISensorReadingProcessor {
+internal class SensorTypeRoutingProcessor : ISensorReadingProcessor {
     private readonly PhysicalSensorProcessor _physicalProcessor;
     private readonly VirtualSensorProcessor _virtualProcessor;
 

@@ -4,7 +4,7 @@ using EerieLeap.Utilities;
 
 namespace EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 
-public partial class VirtualSensorProcessor : ISensorReadingProcessor {
+internal partial class VirtualSensorProcessor : ISensorReadingProcessor {
     private readonly ILogger _logger;
     private readonly SensorReadingBuffer _buffer;
 

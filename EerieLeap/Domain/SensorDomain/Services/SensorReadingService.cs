@@ -7,7 +7,7 @@ using EerieLeap.Domain.SensorDomain.Utilities;
 
 namespace EerieLeap.Domain.SensorDomain.Services;
 
-public sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
+internal sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
     private readonly ILogger _logger;
     private readonly IAdcConfigurationService _adcService;
     private readonly ISensorConfigurationService _sensorsConfigService;

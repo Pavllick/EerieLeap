@@ -3,7 +3,7 @@ using EerieLeap.Domain.SensorDomain.Models;
 
 namespace EerieLeap.Domain.SensorDomain.Processing;
 
-public class SensorReadingChainedProcessor : ISensorReadingProcessor {
+internal class SensorReadingChainedProcessor : ISensorReadingProcessor {
     private readonly ISensorReadingProcessor[] _processors;
 
     public SensorReadingChainedProcessor(params ISensorReadingProcessor[] processors) =>

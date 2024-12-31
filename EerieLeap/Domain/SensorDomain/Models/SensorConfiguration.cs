@@ -1,5 +1,3 @@
-using EerieLeap.Types;
-
 namespace EerieLeap.Domain.SensorDomain.Models;
 
 public record SensorConfiguration {
