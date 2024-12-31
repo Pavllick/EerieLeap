@@ -11,6 +11,7 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     private readonly AdcFactory _adcFactory;
     private readonly IConfigurationRepository _repository;
     private readonly AsyncLock _asyncLock = new();
+
     private AdcConfig? _config;
     private IAdc? _adc;
 
@@ -22,16 +23,19 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
         _repository = repository;
     }
 
-    public async Task InitializeAsync() {
+    public async Task<bool> InitializeAsync() {
         if (_adc != null)
-            return;
+            return true;
 
-        await LoadConfigurationAsync().ConfigureAwait(false);
+        if(!await LoadConfigurationAsync().ConfigureAwait(false))
+            return false;
 
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
         _adc = _adcFactory.CreateAdc();
         _adc.Configure(_config!);
+
+        return true;
     }
 
     public IAdc? GetAdc() =>
@@ -45,43 +49,21 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
 
         var result = await _repository.SaveAsync(ConfigName, config).ConfigureAwait(false);
         if (!result.Success)
-            throw new InvalidOperationException($"Failed to save ADC configuration: {result.Error}");
+            throw new InvalidOperationException($"Failed to save ADC configuration: {string.Join(',', result.Errors.Select(e => e.Message))}");
 
         _config = config;
         _adc?.Configure(config);
+
+        LogConfigurationUpdated();
     }
 
-    private async Task LoadConfigurationAsync() {
+    private async Task<bool> LoadConfigurationAsync() {
         var result = await _repository.LoadAsync<AdcConfig>(ConfigName).ConfigureAwait(false);
 
-        if (!result.Success) {
-            _config = CreateDefaultConfiguration();
-            await _repository.SaveAsync(ConfigName, _config).ConfigureAwait(false);
-            return;
-        }
-
         _config = result.Data;
-    }
 
-    private static AdcConfig CreateDefaultConfiguration() =>
-        new AdcConfig {
-            Type = "ADS7953",
-            BusId = 0,
-            ChipSelect = 0,
-            ClockFrequency = 1_000_000,
-            Mode = 0,
-            DataBitLength = 8,
-            Resolution = 12,
-            ReferenceVoltage = 3.3,
-            Protocol = new AdcProtocolConfig {
-                CommandPrefix = Convert.FromHexString("40"),
-                ChannelBitShift = 2,
-                ChannelMask = 15,
-                ResultBitMask = 4095,
-                ResultBitShift = 0,
-                ReadByteCount = 2
-            }
-        };
+        return result.Success;
+    }
 
     public void Dispose() {
         _asyncLock.Dispose();
@@ -89,12 +71,6 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     }
 
     #region Loggers
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to load ADC configuration")]
-    private partial void LogConfigurationLoadError(Exception ex);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Created default ADC configuration")]
-    private partial void LogDefaultConfigurationCreated();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Updated ADC configuration")]
     private partial void LogConfigurationUpdated();

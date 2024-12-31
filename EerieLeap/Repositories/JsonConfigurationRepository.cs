@@ -3,6 +3,7 @@ using EerieLeap.Utilities;
 using EerieLeap.Configuration;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using EerieLeap.Types;
 
 namespace EerieLeap.Repositories;
 
@@ -44,13 +45,13 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
             var path = GetConfigPath(name);
 
             if (!File.Exists(path))
-                return new ConfigurationResult<T>(false, Error: $"Configuration '{name}' not found");
+                return new ConfigurationResult<T>(false, [$"Configuration '{name}' not found"]);
 
             var json = await File.ReadAllTextAsync(path).ConfigureAwait(false);
             var config = JsonSerializer.Deserialize<T>(json, _readOptions);
 
             if (config == null)
-                return new ConfigurationResult<T>(false, Error: $"Failed to deserialize configuration '{name}'");
+                return new ConfigurationResult<T>(false, [$"Failed to deserialize configuration '{name}'"]);
 
             LogConfigurationLoaded(name);
             return new ConfigurationResult<T>(true, config);
@@ -74,7 +75,7 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
             return new ConfigurationResult<T>(true, config);
         } catch (Exception ex) {
             LogConfigurationSaveError(name, ex);
-            return new ConfigurationResult<T>(false, Error: $"Error saving configuration '{name}': {ex.Message}");
+            return new ConfigurationResult<T>(false, [$"Error saving configuration '{name}': {ex.Message}"]);
         }
     }
 

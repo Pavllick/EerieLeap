@@ -1,4 +1,5 @@
 using EerieLeap.Repositories;
+using EerieLeap.Types;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -35,19 +36,19 @@ public partial class InMemoryConfigurationRepository : IConfigurationRepository,
         try {
             if (!_configurations.TryGetValue(name, out var json)) {
                 LogConfigNotFound(name);
-                return Task.FromResult(new ConfigurationResult<T>(false, Error: $"Configuration '{name}' not found"));
+                return Task.FromResult(new ConfigurationResult<T>(false, [$"Configuration '{name}' not found"]));
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _readOptions);
             if (config == null) {
                 LogDeserializationFailed(name);
-                return Task.FromResult(new ConfigurationResult<T>(false, Error: $"Failed to deserialize configuration '{name}'"));
+                return Task.FromResult(new ConfigurationResult<T>(false, [$"Failed to deserialize configuration '{name}'"]));
             }
 
             return Task.FromResult(new ConfigurationResult<T>(true, config));
         } catch (Exception ex) {
             LogLoadError(name, ex);
-            return Task.FromResult(new ConfigurationResult<T>(false, Error: ex.Message));
+            return Task.FromResult(new ConfigurationResult<T>(false, [ex.Message]));
         }
     }
 
@@ -59,7 +60,7 @@ public partial class InMemoryConfigurationRepository : IConfigurationRepository,
             return Task.FromResult(new ConfigurationResult<T>(true, config));
         } catch (Exception ex) {
             LogSaveError(name, ex);
-            return Task.FromResult(new ConfigurationResult<T>(false, Error: ex.Message));
+            return Task.FromResult(new ConfigurationResult<T>(false, [ex.Message]));
         }
     }
 

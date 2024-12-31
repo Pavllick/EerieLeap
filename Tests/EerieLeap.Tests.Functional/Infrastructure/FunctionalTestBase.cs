@@ -17,7 +17,7 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
         Client = _factory.CreateClient();
     }
 
-    public async Task InitializeAsync() {
+    public async Task ConfigureAdc() {
         if (_initialized)
             return;
 
@@ -28,7 +28,7 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
             var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
             if (!response.IsSuccessStatusCode) {
                 var content = await response.Content.ReadAsStringAsync();
-                throw new InvalidOperationException($"Failed to initialize ADC config: {response.StatusCode} - {content}");
+                throw new HttpRequestException($"Failed to initialize ADC config: {(int)response.StatusCode} - {content}");
             }
 
             _initialized = true;
@@ -55,7 +55,9 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
 
     protected async Task<T?> GetAsync<T>(string url) where T : class {
         var response = await Client.GetAsync(url);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"Failed to get data: {(int)response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
 
         return await response.Content.ReadFromJsonAsync<T>();
     }
@@ -92,7 +94,9 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
 
     protected async Task PostSensorConfigsWithDelay(IEnumerable<SensorConfigRequest> configs, int delayMs = 1000) {
         var response = await PostAsync("api/v1/config/sensors", configs);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"Failed to post sensor configs: {(int)response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
 
         // Allow time for readings to be collected
         await Task.Delay(delayMs);

@@ -4,11 +4,14 @@ using EerieLeap.Domain.SensorDomain.Models;
 using EerieLeap.Domain.SensorDomain.Processing;
 using EerieLeap.Domain.AdcDomain.Services;
 using EerieLeap.Domain.SensorDomain.Utilities;
+using EerieLeap.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace EerieLeap.Domain.SensorDomain.Services;
 
 internal sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
     private readonly ILogger _logger;
+    private readonly ConfigurationOptions _configurationOptions;
     private readonly IAdcConfigurationService _adcService;
     private readonly ISensorConfigurationService _sensorsConfigService;
     private readonly ISensorReadingProcessor _readingProcessor;
@@ -18,12 +21,14 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
 
     public SensorReadingService(
         ILogger logger,
+        [Required] IOptions<ConfigurationOptions> options,
         [Required] IAdcConfigurationService adcService,
         [Required] ISensorConfigurationService sensorsConfigService,
         [Required] ISensorReadingProcessor readingProcessor,
         [Required] SensorReadingBuffer buffer) {
 
         _logger = logger;
+        _configurationOptions = options.Value;
         _adcService = adcService;
         _sensorsConfigService = sensorsConfigService;
         _readingProcessor = readingProcessor;
@@ -46,15 +51,15 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
         _initializationTcs = new TaskCompletionSource<bool>();
 
         try {
-            await _adcService.InitializeAsync().ConfigureAwait(false);
-            await _sensorsConfigService.InitializeAsync().ConfigureAwait(false);
+            await TryInitialize(_adcService.InitializeAsync, "ADC").ConfigureAwait(false);
+            await TryInitialize(_sensorsConfigService.InitializeAsync, "Sensors").ConfigureAwait(false);
 
             _initializationTcs.TrySetResult(true);
 
             while (!stoppingToken.IsCancellationRequested) {
                 try {
                     await ProcessSensorsAsync().ConfigureAwait(false);
-                    await Task.Delay(1000, stoppingToken).ConfigureAwait(false);
+                    await Task.Delay(_configurationOptions.ProcessSensorsIntervalMs, stoppingToken).ConfigureAwait(false);
                 } catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) {
                     // Normal shutdown, no need to log error
                     break;
@@ -66,6 +71,24 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
         } catch (Exception ex) {
             _initializationTcs.TrySetException(ex);
             throw;
+        }
+
+        async Task TryInitialize(Func<Task<bool>> action, string moduleName) {
+            try {
+                if (!await action().ConfigureAwait(false))
+                    ConfigurationInitializationError(moduleName);
+                else
+                    return;
+            } catch (Exception ex) {
+                InitializationError(moduleName);
+            }
+
+            await Task.Delay(_configurationOptions.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
+
+            try {
+                while (!await action().ConfigureAwait(false))
+                    await Task.Delay(_configurationOptions.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
+            } catch { }
         }
     }
 
@@ -109,6 +132,11 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
     }
 
     #region Loggers
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to initialize {moduleName}")]
+    private partial void InitializationError(string moduleName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to load {moduleName} configuration")]
+    private partial void ConfigurationInitializationError(string moduleName);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor readings")]
     private partial void LogUpdateReadingsError(Exception ex);

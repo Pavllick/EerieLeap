@@ -21,8 +21,10 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
         _repository = repository;
     }
 
-    public async Task InitializeAsync() =>
-        await LoadConfigurationAsync().ConfigureAwait(false);
+    public async Task<bool> InitializeAsync() =>
+        _sensors.IsEmpty
+            ? await LoadConfigurationAsync().ConfigureAwait(false)
+            : true;
 
     public IReadOnlyList<SensorConfig> GetConfigurations() {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -57,7 +59,8 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
                 var duplicateErrors = duplicateIds.Select(id =>
                     new ConfigurationError(id, "Duplicate sensor ID"));
 
-                LogValidationError("Multiple sensors", "Duplicate sensor IDs found: " + string.Join(", ", duplicateIds));
+                LogValidationDuplicateIds(string.Join(", ", duplicateIds));
+
                 return ConfigurationResult.CreateFailure(duplicateErrors);
             }
 
@@ -83,9 +86,9 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
 
             var result = await _repository.SaveAsync(ConfigName, configsList).ConfigureAwait(false);
             if (!result.Success) {
-                LogConfigurationSaveError(result.Error!);
+                LogConfigurationSaveError(string.Join(',', result.Errors.Select(e => e.Message))!);
                 return ConfigurationResult.CreateFailure([
-                    new ConfigurationError(string.Empty, $"Failed to save configurations: {result.Error}")
+                    new ConfigurationError(string.Empty, $"Failed to save configurations: {string.Join(',', result.Errors.Select(e => e.Message))}")
                 ]);
             }
 
@@ -103,67 +106,22 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
         }
     }
 
-    private async Task LoadConfigurationAsync() {
+    private async Task<bool> LoadConfigurationAsync() {
         var result = await _repository.LoadAsync<List<SensorConfig>>(ConfigName).ConfigureAwait(false);
 
         if (!result.Success) {
-            var defaultConfigs = CreateDefaultSensorConfigs();
-            await _repository.SaveAsync(ConfigName, defaultConfigs).ConfigureAwait(false);
-
-            foreach (var config in defaultConfigs) {
+            await _repository.SaveAsync(ConfigName, Array.Empty<SensorConfig>()).ConfigureAwait(false);
+        } else {
+            foreach (var config in result.Data!) {
                 var sensor = Sensor.FromConfig(config);
                 _sensors.TryAdd(sensor.Id.Value, sensor);
             }
-
-            LogDefaultConfigurationCreated(defaultConfigs.Count);
-            return;
         }
 
-        foreach (var config in result.Data!) {
-            var sensor = Sensor.FromConfig(config);
-            _sensors.TryAdd(sensor.Id.Value, sensor);
-        }
+        LogConfigurationLoadSuccess(_sensors.Count);
 
-        LogConfigurationLoadSuccess(result.Data!.Count);
+        return true;
     }
-
-    private static List<SensorConfig> CreateDefaultSensorConfigs() =>
-        new List<SensorConfig> {
-            new() {
-                Id = "coolant_temp",
-                Name = "Coolant Temperature",
-                Type = SensorType.Physical,
-                Channel = 0,
-                MinVoltage = 0.5,
-                MaxVoltage = 4.5,
-                MinValue = 0,
-                MaxValue = 120,
-                Unit = "°C",
-                SamplingRateMs = 1000
-            },
-            new() {
-                Id = "oil_temp",
-                Name = "Oil Temperature",
-                Type = SensorType.Physical,
-                Channel = 1,
-                MinVoltage = 0.5,
-                MaxVoltage = 4.5,
-                MinValue = 0,
-                MaxValue = 150,
-                Unit = "°C",
-                SamplingRateMs = 1000
-            },
-            new() {
-                Id = "avg_temp",
-                Name = "Average Temperature",
-                Type = SensorType.Virtual,
-                MinValue = 0,
-                MaxValue = 150,
-                Unit = "°C",
-                SamplingRateMs = 1000,
-                ConversionExpression = "({coolant_temp} + {oil_temp}) / 2 * Sin(PI/4)"
-            }
-        };
 
     public void Dispose() {
         Dispose(true);
@@ -200,9 +158,6 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Successfully updated {count} sensor configurations")]
     private partial void LogConfigurationUpdateSuccess(int count);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Created {count} default sensor configurations")]
-    private partial void LogDefaultConfigurationCreated(int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Successfully loaded {count} sensor configurations")]
     private partial void LogConfigurationLoadSuccess(int count);

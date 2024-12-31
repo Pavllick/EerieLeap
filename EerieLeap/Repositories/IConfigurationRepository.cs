@@ -1,16 +1,6 @@
-using System;
-using System.Text.Json;
+using EerieLeap.Types;
 
 namespace EerieLeap.Repositories;
-
-/// <summary>
-/// Represents the result of a configuration operation
-/// </summary>
-public record ConfigurationResult<T>(
-    bool Success,
-    T? Data = default,
-    string? Error = null
-);
 
 /// <summary>
 /// Defines operations for managing configuration persistence

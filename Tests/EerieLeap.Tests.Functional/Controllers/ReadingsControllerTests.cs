@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
-public class ReadingsControllerTests : FunctionalTestBase {
+public class ReadingsControllerTests : FunctionalTestBase, IAsyncLifetime {
     private readonly ITestOutputHelper _output;
 
     public ReadingsControllerTests(
@@ -15,6 +15,9 @@ public class ReadingsControllerTests : FunctionalTestBase {
         ITestOutputHelper output) : base(factory) {
         _output = output;
     }
+
+    public async Task InitializeAsync() =>
+        await ConfigureAdc();
 
     [Fact]
     public async Task GetReadings_ReturnsSuccessStatusCode() {
@@ -179,5 +182,10 @@ public class ReadingsControllerTests : FunctionalTestBase {
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    public Task DisposeAsync() {
+        Dispose();
+        return Task.CompletedTask;
     }
 }
