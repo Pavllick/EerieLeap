@@ -15,8 +15,6 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     private AdcConfig? _config;
     private IAdc? _adc;
 
-    private const string ConfigName = "adc";
-
     public AdcConfigurationService(ILogger logger, [Required] AdcFactory adcFactory, [Required] IConfigurationRepository repository) {
         _logger = logger;
         _adcFactory = adcFactory;
@@ -47,7 +45,7 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     public async Task UpdateConfigurationAsync([Required] AdcConfig config) {
         using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
 
-        var result = await _repository.SaveAsync(ConfigName, config).ConfigureAwait(false);
+        var result = await _repository.SaveAsync(AppConstants.AdcConfigFileName, config).ConfigureAwait(false);
         if (!result.Success)
             throw new InvalidOperationException($"Failed to save ADC configuration: {string.Join(',', result.Errors.Select(e => e.Message))}");
 
@@ -58,7 +56,7 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     }
 
     private async Task<bool> LoadConfigurationAsync() {
-        var result = await _repository.LoadAsync<AdcConfig>(ConfigName).ConfigureAwait(false);
+        var result = await _repository.LoadAsync<AdcConfig>(AppConstants.AdcConfigFileName).ConfigureAwait(false);
 
         _config = result.Data;
 

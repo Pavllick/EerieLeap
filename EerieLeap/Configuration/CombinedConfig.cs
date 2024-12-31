@@ -7,6 +7,9 @@ namespace EerieLeap.Configuration;
 [IgnoreCustomValidation]
 public class CombinedConfig {
     [Required]
+    public Settings Settings { get; set; } = new();
+
+    [Required]
     public AdcConfig AdcConfig { get; set; } = new();
 
     [Required]

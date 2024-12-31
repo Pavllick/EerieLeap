@@ -30,11 +30,11 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
             });
 
             // Override ConfigurationOptions with test-specific configuration
-            var configurationOptionsDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IOptions<ConfigurationOptions>));
-            if (configurationOptionsDescriptor != null)
-                services.Remove(configurationOptionsDescriptor);
+            var settingsDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IOptions<Settings>));
+            if (settingsDescriptor != null)
+                services.Remove(settingsDescriptor);
 
-            services.Configure<ConfigurationOptions>(options =>
+            services.Configure<Settings>(options =>
                 options.ConfigurationLoadRetryMs = 100);
         });
 

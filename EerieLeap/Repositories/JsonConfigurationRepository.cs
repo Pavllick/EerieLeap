@@ -1,14 +1,11 @@
 using System.Text.Json;
 using EerieLeap.Utilities;
-using EerieLeap.Configuration;
-using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using EerieLeap.Types;
 
 namespace EerieLeap.Repositories;
 
 public partial class JsonConfigurationRepository : IConfigurationRepository {
-    private readonly string _basePath;
     private readonly ILogger _logger;
     private readonly JsonSerializerOptions _readOptions;
     private readonly JsonSerializerOptions _writeOptions;
@@ -17,13 +14,10 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
 
     public JsonConfigurationRepository(
         ILogger logger,
-        [Required] IOptions<ConfigurationOptions> options,
         JsonSerializerOptions? readOptions = null,
         JsonSerializerOptions? writeOptions = null) {
 
         _logger = logger;
-        _basePath = options.Value.ConfigurationPath
-            ?? throw new ArgumentException("ConfigurationPath not set in configuration");
 
         _readOptions = readOptions ?? new JsonSerializerOptions {
             PropertyNameCaseInsensitive = true
@@ -32,9 +26,6 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
         _writeOptions = writeOptions ?? new JsonSerializerOptions {
             WriteIndented = true
         };
-
-        // Ensure configuration directory exists
-        Directory.CreateDirectory(_basePath);
     }
 
     public async Task<ConfigurationResult<T>> LoadAsync<T>([Required] string name) where T : class {
@@ -106,7 +97,7 @@ public partial class JsonConfigurationRepository : IConfigurationRepository {
     }
 
     private string GetConfigPath([Required] string name) =>
-        Path.Combine(_basePath, $"{name}.json");
+        Path.Combine(AppConstants.ConfigDirPath, $"{name}.json");
 
     public void Dispose() {
         Dispose(disposing: true);

@@ -11,7 +11,7 @@ namespace EerieLeap.Domain.SensorDomain.Services;
 
 internal sealed partial class SensorReadingService : BackgroundService, ISensorReadingService {
     private readonly ILogger _logger;
-    private readonly ConfigurationOptions _configurationOptions;
+    private readonly Settings _settings;
     private readonly IAdcConfigurationService _adcService;
     private readonly ISensorConfigurationService _sensorsConfigService;
     private readonly ISensorReadingProcessor _readingProcessor;
@@ -21,14 +21,14 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
 
     public SensorReadingService(
         ILogger logger,
-        [Required] IOptions<ConfigurationOptions> options,
+        [Required] IOptions<Settings> settings,
         [Required] IAdcConfigurationService adcService,
         [Required] ISensorConfigurationService sensorsConfigService,
         [Required] ISensorReadingProcessor readingProcessor,
         [Required] SensorReadingBuffer buffer) {
 
         _logger = logger;
-        _configurationOptions = options.Value;
+        _settings = settings.Value;
         _adcService = adcService;
         _sensorsConfigService = sensorsConfigService;
         _readingProcessor = readingProcessor;
@@ -59,7 +59,7 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
             while (!stoppingToken.IsCancellationRequested) {
                 try {
                     await ProcessSensorsAsync().ConfigureAwait(false);
-                    await Task.Delay(_configurationOptions.ProcessSensorsIntervalMs, stoppingToken).ConfigureAwait(false);
+                    await Task.Delay(_settings.ProcessSensorsIntervalMs, stoppingToken).ConfigureAwait(false);
                 } catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) {
                     // Normal shutdown, no need to log error
                     break;
@@ -83,11 +83,11 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
                 InitializationError(moduleName);
             }
 
-            await Task.Delay(_configurationOptions.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
+            await Task.Delay(_settings.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
 
             try {
                 while (!await action().ConfigureAwait(false))
-                    await Task.Delay(_configurationOptions.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
+                    await Task.Delay(_settings.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
             } catch { }
         }
     }

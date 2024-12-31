@@ -9,7 +9,6 @@ using EerieLeap.Domain.SensorDomain.Models;
 namespace EerieLeap.Domain.SensorDomain.Services;
 
 internal partial class SensorConfigurationService : ISensorConfigurationService {
-    private const string ConfigName = "sensors";
     private readonly ILogger _logger;
     private readonly IConfigurationRepository _repository;
     private readonly ConcurrentDictionary<string, Sensor> _sensors = new();
@@ -84,7 +83,7 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
                 return ConfigurationResult.CreateFailure(validationErrors);
             }
 
-            var result = await _repository.SaveAsync(ConfigName, configsList).ConfigureAwait(false);
+            var result = await _repository.SaveAsync(AppConstants.SensorsConfigFileName, configsList).ConfigureAwait(false);
             if (!result.Success) {
                 LogConfigurationSaveError(string.Join(',', result.Errors.Select(e => e.Message))!);
                 return ConfigurationResult.CreateFailure([
@@ -107,10 +106,10 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
     }
 
     private async Task<bool> LoadConfigurationAsync() {
-        var result = await _repository.LoadAsync<List<SensorConfig>>(ConfigName).ConfigureAwait(false);
+        var result = await _repository.LoadAsync<List<SensorConfig>>(AppConstants.SensorsConfigFileName).ConfigureAwait(false);
 
         if (!result.Success) {
-            await _repository.SaveAsync(ConfigName, Array.Empty<SensorConfig>()).ConfigureAwait(false);
+            await _repository.SaveAsync(AppConstants.SensorsConfigFileName, Array.Empty<SensorConfig>()).ConfigureAwait(false);
         } else {
             foreach (var config in result.Data!) {
                 var sensor = Sensor.FromConfig(config);

@@ -3,17 +3,26 @@ using EerieLeap.Domain.SensorDomain.Services;
 using EerieLeap.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Controllers;
 
 [ApiController]
 [Route("api/v1/config")]
 public partial class ConfigController : ConfigControllerBase {
+    private readonly Settings _settings;
     private readonly IAdcConfigurationService _adcService;
     private readonly ISensorConfigurationService _sensorConfigService;
 
-    public ConfigController(ILogger logger, IAdcConfigurationService adcService, ISensorConfigurationService sensorConfigService)
-        : base(logger) {
+    public ConfigController(
+        ILogger logger,
+        [Required] IOptions<Settings> settings,
+        [Required] IAdcConfigurationService adcService,
+        [Required] ISensorConfigurationService sensorConfigService)
+    : base(logger) {
+
+        _settings = settings.Value;
         _adcService = adcService;
         _sensorConfigService = sensorConfigService;
     }
@@ -22,6 +31,7 @@ public partial class ConfigController : ConfigControllerBase {
     public ActionResult<CombinedConfig> GetConfig() {
         try {
             var combinedConfig = new CombinedConfig {
+                Settings = _settings,
                 AdcConfig = _adcService.GetConfiguration(),
                 SensorConfigs = _sensorConfigService.GetConfigurations()
             };

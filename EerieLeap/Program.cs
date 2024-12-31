@@ -8,6 +8,7 @@ using EerieLeap.Domain.SensorDomain.Services;
 using EerieLeap.Domain.SensorDomain.Processing;
 using EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 using Microsoft.AspNetCore.Builder;
+using System.Text.Json;
 
 namespace EerieLeap;
 
@@ -25,17 +26,15 @@ public sealed class Program {
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 options.JsonSerializerOptions.WriteIndented = true;
             })
-            .ConfigureApiBehaviorOptions(options => {
-                options.SuppressModelStateInvalidFilter = true;
-            });
+            .ConfigureApiBehaviorOptions(options =>
+                options.SuppressModelStateInvalidFilter = true);
+
+        // Configure and register configuration options
+        builder.ConfigureAppSettings();
 
         // Register services
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<AdcFactory>();
-
-        // Configure and register configuration options
-        builder.Services.Configure<ConfigurationOptions>(
-            builder.Configuration.GetSection(nameof(ConfigurationOptions)));
 
         // Register configuration repository
         builder.Services.AddSingleton<IConfigurationRepository, JsonConfigurationRepository>();
@@ -88,5 +87,28 @@ public sealed class Program {
         app.MapControllers();
 
         app.Run();
+    }
+}
+
+public static class ProgramExtensions {
+    public static IHostApplicationBuilder ConfigureAppSettings(this IHostApplicationBuilder app) {
+        var configurationFilePath = Path.Combine(AppConstants.ConfigDirPath, $"{AppConstants.SettingsConfigFileName}.json");
+
+        if (!File.Exists(configurationFilePath)) {
+            var defaultConfig = new Settings();
+
+            var json = JsonSerializer.Serialize(new { Settings = defaultConfig });
+
+            Directory.CreateDirectory(AppConstants.ConfigDirPath);
+            File.WriteAllText(configurationFilePath, json);
+        }
+
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile(configurationFilePath, optional: false, reloadOnChange: true)
+            .Build();
+
+        app.Services.Configure<Settings>(configuration.GetSection(nameof(Settings)));
+
+        return app;
     }
 }
