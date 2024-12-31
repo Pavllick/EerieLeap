@@ -54,6 +54,7 @@ public sealed class MockAdc : IAdc {
     private double GetRandomDouble() {
         var buffer = new byte[8];
         _random.GetBytes(buffer);
+
         return (double)BitConverter.ToUInt64(buffer, 0) / ulong.MaxValue;
     }
 

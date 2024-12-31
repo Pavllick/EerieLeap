@@ -29,8 +29,8 @@ public class Sensor {
                     ? new CalibrationData(
                         config.MinVoltage.Value,
                         config.MaxVoltage.Value,
-                        config.MinValue ?? 0,
-                        config.MaxValue ?? 100)
+                        config.MinValue ?? double.MinValue,
+                        config.MaxValue ?? double.MaxValue)
                     : null,
                 config.ConversionExpression
             ));

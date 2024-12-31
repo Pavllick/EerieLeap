@@ -29,12 +29,16 @@ public class ReadingsControllerTests : FunctionalTestBase {
     [Fact]
     public async Task GetReadings_WithPhysicalSensor_ReturnsValidReadings() {
         // Arrange
-        var config1 = SensorConfigRequest.CreateValidPhysical() with { Id = "physical_sensor_1", Channel = 0 };
+        var config1 = SensorConfigRequest.CreateValidPhysical() with {
+            Id = "physical_sensor_1",
+            Channel = 0,
+            MinValue = 1
+        };
 
         var config2 = SensorConfigRequest.CreateValidPhysical() with {
             Id = "physical_sensor_2",
             Channel = 1,
-            ConversionExpression = "x + 10"
+            MinValue = 1
         };
 
         await PostSensorConfigsWithDelay(new List<SensorConfigRequest> { config1, config2 });
@@ -67,6 +71,7 @@ public class ReadingsControllerTests : FunctionalTestBase {
 
         var virtualConfig = SensorConfigRequest.CreateValidVirtual() with {
             Id = "virtual_avg_temp",
+            MinValue = 1,
             ConversionExpression = "{physical_temp_1} * 0.8" // Simple scaling of the physical sensor
         };
 
