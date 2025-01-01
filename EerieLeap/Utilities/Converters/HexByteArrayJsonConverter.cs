@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,31 +10,31 @@ public sealed class HexByteArrayJsonConverter : JsonConverter<byte[]?> {
 
     public override byte[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType == JsonTokenType.Null)
-            return Array.Empty<byte>();
+            return Array.Empty<byte>(); // Return empty array if value is null
 
-        if (reader.TokenType != JsonTokenType.String)
-            throw new JsonException("Expected string value for byte array");
+        if (reader.TokenType != JsonTokenType.StartArray)
+            throw new JsonException("Expected start of array.");
 
-        string? hex = reader.GetString();
-        if (hex == null)
-            return Array.Empty<byte>();
+        var byteList = new List<byte>();
 
-        hex = hex.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? hex[2..]
-            : hex;
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndArray)
+                return byteList.ToArray();
 
-        if (string.IsNullOrEmpty(hex))
-            return Array.Empty<byte>();
+            if (reader.TokenType != JsonTokenType.String)
+                throw new JsonException("Expected string values in array.");
 
-        // Handle odd-length hex strings by padding with leading zero
-        if (hex.Length % 2 == 1)
-            hex = "0" + hex;
+            var hexString = reader.GetString();
+            if (string.IsNullOrWhiteSpace(hexString) || !hexString.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                throw new JsonException("Expected hex string starting with '0x'.");
 
-        try {
-            return Convert.FromHexString(hex);
-        } catch (FormatException) {
-            throw new JsonException($"Invalid hex string: {hex}");
+            if (!byte.TryParse(hexString.AsSpan(2), NumberStyles.HexNumber, null, out var byteValue))
+                throw new JsonException($"Invalid hex value: {hexString}");
+
+            byteList.Add(byteValue);
         }
+
+        throw new JsonException("Unexpected end of JSON.");
     }
 
     public override void Write([Required] Utf8JsonWriter writer, byte[]? value, JsonSerializerOptions options) {
@@ -42,11 +43,11 @@ public sealed class HexByteArrayJsonConverter : JsonConverter<byte[]?> {
             return;
         }
 
-        if (value.Length == 0) {
-            writer.WriteStringValue("0x");
-            return;
-        }
+        writer.WriteStartArray();
 
-        writer.WriteStringValue("0x" + Convert.ToHexString(value).ToUpperInvariant());
+        foreach (var byteValue in value)
+            writer.WriteStringValue($"0x{byteValue:X2}");
+
+        writer.WriteEndArray();
     }
 }

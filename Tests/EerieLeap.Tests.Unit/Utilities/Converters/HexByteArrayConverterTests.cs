@@ -18,29 +18,27 @@ public class HexByteArrayConverterTests {
     }
 
     [Theory]
-    [InlineData("0x0102", new byte[] { 0x01, 0x02 })]
-    [InlineData("0102", new byte[] { 0x01, 0x02 })]
-    [InlineData("", new byte[0])]
-    [InlineData(null, new byte[0])]
-    [InlineData("0xf", new byte[] { 0x0f })]
-    [InlineData("f", new byte[] { 0x0f })]
-    public void Deserialize_ValidHexString_ReturnsExpectedBytes(string? hexString, byte[] expected) {
-        var json = hexString == null ? "null" : $"\"{hexString}\"";
-        var testObject = JsonSerializer.Deserialize<TestClass>($"{{\"Data\": {json}}}", _options);
+    [InlineData("null", new byte[0])]
+    [InlineData("[]", new byte[0])]
+    [InlineData("[\"0x01\", \"0x02\"]", new byte[] { 0x01, 0x02 })]
+    public void Deserialize_ValidHexArray_ReturnsExpectedBytes(string jsonData, byte[] expected) {
+        var json = $"{{\"Data\": {jsonData}}}";
+
+        var testObject = JsonSerializer.Deserialize<TestClass>(json, _options);
 
         Assert.NotNull(testObject);
-        Assert.Equal(expected, testObject.Data);
+        Assert.Equal(expected, testObject?.Data);
     }
 
     [Theory]
-    [InlineData(new byte[] { 0x01, 0x02 }, "0x0102")]
-    [InlineData(new byte[0], "0x")]
-    [InlineData(new byte[] { 0x0f }, "0x0F")]
-    public void Serialize_ByteArray_ReturnsExpectedHexString(byte[] input, string expected) {
+    [InlineData(new byte[] { 0x01, 0x02 }, new[] { "0x01", "0x02" })]
+    [InlineData(new byte[0], new string[0])]
+    [InlineData(new byte[] { 0x0f }, new[] { "0x0F" })]
+    public void Serialize_ByteArray_ReturnsExpectedHexArray(byte[] input, string[] expected) {
         var testObject = new TestClass { Data = input };
         var json = JsonSerializer.Serialize(testObject, _options);
 
-        var expectedJson = $"{{\"Data\":\"{expected}\"}}";
+        var expectedJson = $"{{\"Data\":[{string.Join(",", expected.Select(h => $"\"{h}\""))}]}}";
         Assert.Equal(expectedJson, json);
     }
 
