@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Device.Gpio;
 using System.Device.Spi;
+using System.Diagnostics;
 using EerieLeap.Configuration;
 
 namespace EerieLeap.Domain.AdcDomain.Hardware;
@@ -10,6 +12,8 @@ namespace EerieLeap.Domain.AdcDomain.Hardware;
 public partial class SpiAdc : IAdc, IDisposable {
     private readonly ILogger _logger;
     private SpiDevice? _spiDevice;
+    private GpioController _gpioController;
+    private int _drdyPinNumber;
     private AdcConfig? _config;
     private bool _isDisposed;
 
@@ -27,6 +31,12 @@ public partial class SpiAdc : IAdc, IDisposable {
         _spiDevice = SpiDevice.Create(settings);
         _config = config;
 
+        _drdyPinNumber = 1;
+        _gpioController = new GpioController();
+        _gpioController.OpenPin(_drdyPinNumber, PinMode.Input);
+
+        InitAdc();
+
         LogConfiguration(
             config.Type!,
             config.BusId!.Value,
@@ -40,11 +50,19 @@ public partial class SpiAdc : IAdc, IDisposable {
             Convert.ToString(config.Protocol.ChannelMask!.Value, 2).PadLeft(8, '0'),
             Convert.ToString(config.Protocol.ResultBitMask!.Value, 2),
             config.Protocol.ReadByteCount!.Value);
+
+        void InitAdc() {
+            // Stop Read Data Continuously
+            _spiDevice.Write([0x0f]); // SDATAC
+            Thread.Sleep(10);
+        }
     }
 
     public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) =>
         await Task.Run(() => {
-            var (_, rawValue) = TransferSpi(channel);
+            //var (_, rawValue) = TransferSpi(channel);
+            int rawValue = TransferSpiADS1256(channel);
+
             var voltage = ConvertToVoltage(rawValue);
             LogChannelReading(channel, rawValue, voltage);
             return voltage;
@@ -74,6 +92,53 @@ public partial class SpiAdc : IAdc, IDisposable {
         return (readBuffer, rawValue);
     }
 
+    public bool IsDataReady() =>
+        _gpioController.Read(_drdyPinNumber) == PinValue.Low;
+
+    private int TransferSpiADS1256(int channel) {
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+
+        if (_spiDevice == null || _config == null)
+            throw new InvalidOperationException("ADC not configured. Call Configure first.");
+
+        SetMultiplexer();
+
+        var data = ReadData() ?? throw new InvalidOperationException("Data not ready.");
+
+        // Extract reading using configured bit masks and shifts
+        int rawValue = 0;
+        for (int i = 0; i < data.Length; i++)
+            rawValue = (rawValue << 8) | data[i];
+
+        return rawValue;
+
+        void SetMultiplexer() {
+            var setMultiplexerCommand = new byte[] { 0x51, 0x00, (byte)((channel << 4) | 0b1000) };
+            _spiDevice.Write(setMultiplexerCommand);
+            Thread.Sleep(10);
+        }
+
+        byte[] ReadData() {
+            int readTimeoutMs = 1000;
+
+            Stopwatch sw = new();
+            sw.Start();
+
+            while (!IsDataReady() && sw.ElapsedMilliseconds < readTimeoutMs)
+                Thread.Sleep(10);
+
+            sw.Stop();
+
+            if (!IsDataReady())
+                return null;
+
+            byte[] response = new byte[3];
+            _spiDevice.TransferFullDuplex([0x01], response); // RDATA
+
+            return response;
+        }
+    }
+
     private double ConvertToVoltage(int rawValue) =>
         _config == null
             ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
@@ -85,6 +150,7 @@ public partial class SpiAdc : IAdc, IDisposable {
 
         if (disposing) {
             _spiDevice?.Dispose();
+            _gpioController.ClosePin(_drdyPinNumber);
             _spiDevice = null;
             _config = null;
         }
