@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EerieLeap.Tests.Functional"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidationProcessor", "ValidationProcessor\ValidationProcessor.csproj", "{E640A5CB-8E6D-4FFC-8A3B-3452E97DCF39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptInterpreter", "ScriptInterpreter\ScriptInterpreter.csproj", "{F2265158-9F76-427B-B9C1-FA6155718376}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{E640A5CB-8E6D-4FFC-8A3B-3452E97DCF39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E640A5CB-8E6D-4FFC-8A3B-3452E97DCF39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E640A5CB-8E6D-4FFC-8A3B-3452E97DCF39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2265158-9F76-427B-B9C1-FA6155718376}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2265158-9F76-427B-B9C1-FA6155718376}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2265158-9F76-427B-B9C1-FA6155718376}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2265158-9F76-427B-B9C1-FA6155718376}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

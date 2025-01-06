@@ -8,13 +8,12 @@ using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
+[Collection("Sequential")]
 public class ConfigControllerTests : FunctionalTestBase {
     private readonly ITestOutputHelper _output;
 
-    public ConfigControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
-        : base(factory) {
+    public ConfigControllerTests(ITestOutputHelper output) =>
         _output = output;
-    }
 
     [Fact]
     public async Task GetConfig_ReturnsSuccessStatusCode() {
@@ -28,8 +27,19 @@ public class ConfigControllerTests : FunctionalTestBase {
     }
 
     [Fact]
+    public async Task GetAdcConfig_NotConfigured_ReturnsNotFoundStatusCode() {
+        // Act
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+            await GetAsync<AdcConfigRequest>("api/v1/config/adc"));
+
+        // Assert
+        Assert.Contains("ADC configuration not found", exception.Message);
+    }
+
+    [Fact]
     public async Task GetAdcConfig_ReturnsSuccessStatusCode() {
         // Act
+        await ConfigureAdc();
         var config = await GetAsync<AdcConfigRequest>("api/v1/config/adc");
 
         // Assert
@@ -47,25 +57,29 @@ public class ConfigControllerTests : FunctionalTestBase {
 
     [Fact]
     public async Task UpdateAdcConfig_WithValidAdcConfig_ReturnsSuccessStatusCode() {
+        await ConfigureAdc();
+
         // Arrange
-        var request = AdcConfigRequest.CreateValid();
+        var newConfig = AdcConfigRequest.CreateValid() with {
+            Type = "MCP3008"
+        };
 
         // Act
-        var response = await PostAsync("api/v1/config/adc", request);
+        var response = await PostAsync("api/v1/config/adc", newConfig);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         // Verify all properties were updated correctly
         var updatedConfig = await GetAsync<AdcConfigRequest>("api/v1/config/adc");
-        Assert.Equal(request.Type, updatedConfig!.Type);
-        Assert.Equal(request.Resolution, updatedConfig.Resolution);
-        Assert.Equal(request.ReferenceVoltage, updatedConfig.ReferenceVoltage);
-        Assert.Equal(request.ClockFrequency, updatedConfig.ClockFrequency);
-        Assert.Equal(request.BusId, updatedConfig.BusId);
-        Assert.Equal(request.ChipSelect, updatedConfig.ChipSelect);
-        Assert.Equal(request.Mode, updatedConfig.Mode);
-        Assert.Equal(request.DataBitLength, updatedConfig.DataBitLength);
+        Assert.Equal(newConfig.Type, updatedConfig!.Type);
+        Assert.Equal(newConfig.Resolution, updatedConfig.Resolution);
+        Assert.Equal(newConfig.ReferenceVoltage, updatedConfig.ReferenceVoltage);
+        Assert.Equal(newConfig.ClockFrequency, updatedConfig.ClockFrequency);
+        Assert.Equal(newConfig.BusId, updatedConfig.BusId);
+        Assert.Equal(newConfig.ChipSelect, updatedConfig.ChipSelect);
+        Assert.Equal(newConfig.Mode, updatedConfig.Mode);
+        Assert.Equal(newConfig.DataBitLength, updatedConfig.DataBitLength);
         Assert.NotNull(updatedConfig.Protocol);
     }
 

@@ -1,5 +1,6 @@
 using EerieLeap.Configuration;
 using EerieLeap.Domain.AdcDomain.Hardware;
+using EerieLeap.Domain.Helpers;
 using EerieLeap.Repositories;
 using EerieLeap.Utilities;
 using System.ComponentModel.DataAnnotations;
@@ -8,30 +9,55 @@ namespace EerieLeap.Domain.AdcDomain.Services;
 
 internal sealed partial class AdcConfigurationService : IAdcConfigurationService {
     private readonly ILogger _logger;
-    private readonly AdcFactory _adcFactory;
+    private readonly ConfigurationInitializeHelper _configurationInitializeHelper;
+    private readonly IAdc _adc;
     private readonly IConfigurationRepository _repository;
     private readonly AsyncLock _asyncLock = new();
 
     private AdcConfig? _config;
-    private IAdc? _adc;
+    private string? _processingScript;
 
-    public AdcConfigurationService(ILogger logger, [Required] AdcFactory adcFactory, [Required] IConfigurationRepository repository) {
+    public AdcConfigurationService(
+        ILogger logger,
+        [Required] ConfigurationInitializeHelper configurationInitializeHelper,
+        [Required] IAdc adc,
+        [Required] IConfigurationRepository repository) {
+
         _logger = logger;
-        _adcFactory = adcFactory;
+        _configurationInitializeHelper = configurationInitializeHelper;
+        _adc = adc;
         _repository = repository;
     }
 
-    public async Task<bool> InitializeAsync() {
-        if (_adc != null)
-            return true;
+    public async Task InitializeAsync(CancellationToken stoppingToken) {
+        await _configurationInitializeHelper
+            .TryInitialize(InitializeConfigurationAsync, "ADC configuration", stoppingToken)
+            .ConfigureAwait(false);
 
-        if(!await LoadConfigurationAsync().ConfigureAwait(false))
+        await _configurationInitializeHelper
+            .TryInitialize(InitializeProcessingScriptAsync, "ADC processing script", stoppingToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<bool> InitializeConfigurationAsync(CancellationToken stoppingToken) {
+        if (!await LoadConfigurationAsync().ConfigureAwait(false))
             return false;
 
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+        using var releaser = await _asyncLock.LockAsync(stoppingToken).ConfigureAwait(false);
 
-        _adc = _adcFactory.CreateAdc();
-        _adc.Configure(_config!);
+        _adc.UpdateConfiguration(_config!);
+
+        return true;
+    }
+
+    private async Task<bool> InitializeProcessingScriptAsync(CancellationToken stoppingToken) {
+        if (!File.Exists(GetConfigurationScritpPath()))
+            return false;
+
+        string jsConfigScriptCode = await File.ReadAllTextAsync(GetConfigurationScritpPath(), stoppingToken).ConfigureAwait(false);
+        _adc.UpdateProcessingScript(jsConfigScriptCode);
+
+        _processingScript = jsConfigScriptCode;
 
         return true;
     }
@@ -42,15 +68,32 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
     public AdcConfig? GetConfiguration() =>
         _config;
 
-    public async Task UpdateConfigurationAsync([Required] AdcConfig config) {
-        using var releaser = await _asyncLock.LockAsync().ConfigureAwait(false);
+    public string? GetProcessingScript() =>
+        _processingScript;
+
+    public async Task UpdateConfigurationAsync([Required] AdcConfig config, CancellationToken stoppingToken) {
+        using var releaser = await _asyncLock.LockAsync(stoppingToken).ConfigureAwait(false);
 
         var result = await _repository.SaveAsync(AppConstants.AdcConfigFileName, config).ConfigureAwait(false);
         if (!result.Success)
             throw new InvalidOperationException($"Failed to save ADC configuration: {string.Join(',', result.Errors.Select(e => e.Message))}");
 
+        _adc.UpdateConfiguration(config);
         _config = config;
-        _adc?.Configure(config);
+
+        LogConfigurationUpdated();
+    }
+
+    public async Task UpdateProcessingScriptAsync([Required] string processingScript, CancellationToken stoppingToken) {
+        using var releaser = await _asyncLock.LockAsync(stoppingToken).ConfigureAwait(false);
+
+        if (!File.Exists(AppConstants.ConfigDirPath))
+            Directory.CreateDirectory(AppConstants.ConfigDirPath);
+
+        _adc.UpdateProcessingScript(processingScript);
+        _processingScript = processingScript;
+
+        await File.WriteAllTextAsync(GetConfigurationScritpPath(), processingScript, stoppingToken).ConfigureAwait(false);
 
         LogConfigurationUpdated();
     }
@@ -62,6 +105,9 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
 
         return result.Success;
     }
+
+    private static string GetConfigurationScritpPath() =>
+        Path.Combine(AppConstants.ConfigDirPath, $"{AppConstants.AdcConfigScriptFileName}.js");
 
     public void Dispose() {
         _asyncLock.Dispose();

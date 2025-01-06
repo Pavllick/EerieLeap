@@ -37,4 +37,10 @@
     <ProjectReference Include="..\..\EerieLeap\EerieLeap.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Infrastructure\adc_config_script.js">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

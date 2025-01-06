@@ -1,20 +1,23 @@
 using System.Net.Http.Json;
-using Xunit;
 using System.Text;
 using System.Text.Json;
+using EerieLeap.Domain.SensorDomain.Models;
 using EerieLeap.Tests.Functional.Models;
+using EerieLeap.Utilities.IO;
 
 namespace EerieLeap.Tests.Functional.Infrastructure;
 
-public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDisposable {
+public class FunctionalTestBase : IDisposable {
     private readonly TestWebApplicationFactory _factory;
     protected readonly HttpClient Client;
     private bool _initialized;
-    private bool _disposed;
+    private bool _disposed; 
 
-    protected FunctionalTestBase(TestWebApplicationFactory factory) {
-        _factory = factory;
-        Client = _factory.CreateClient();
+    protected FunctionalTestBase() {
+        ClearConfigDirectory();
+
+        _factory = new TestWebApplicationFactory();
+        Client = _factory.CreateClient(); 
     }
 
     public async Task ConfigureAdc() {
@@ -22,10 +25,18 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
             return;
 
         try {
-            // Set up initial ADC configuration
-            var adcConfig = AdcConfigRequest.CreateValid();
+            string adcConfigScript = await File.ReadAllTextAsync(PathResolver.GetFullPath("adc_config_script.js"));
+            using var adcConfigScriptContent = new StringContent(adcConfigScript, Encoding.UTF8, "application/javascript");
+            var response = await Client.PostAsync("api/v1/config/adc/script", adcConfigScriptContent);
 
-            var response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
+            if (!response.IsSuccessStatusCode) {
+                var content = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to initialize ADC config script: {(int)response.StatusCode} - {content}");
+            }
+
+            var adcConfig = AdcConfigRequest.CreateValid();
+            response = await Client.PostAsJsonAsync("api/v1/config/adc", adcConfig);
+
             if (!response.IsSuccessStatusCode) {
                 var content = await response.Content.ReadAsStringAsync();
                 throw new HttpRequestException($"Failed to initialize ADC config: {(int)response.StatusCode} - {content}");
@@ -38,11 +49,19 @@ public class FunctionalTestBase : IClassFixture<TestWebApplicationFactory>, IDis
         }
     }
 
+    private void ClearConfigDirectory() {
+        if (Directory.Exists(AppConstants.ConfigDirPath))
+            Directory.Delete(AppConstants.ConfigDirPath, true);
+    }
+
     protected virtual void Dispose(bool disposing) {
         if (!_disposed) {
             if (disposing) {
+                ClearConfigDirectory();
+
                 // Dispose managed resources
                 Client?.Dispose();
+                _factory.Dispose();
             }
             _disposed = true;
         }

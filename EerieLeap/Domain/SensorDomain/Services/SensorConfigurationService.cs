@@ -5,25 +5,36 @@ using EerieLeap.Configuration;
 using EerieLeap.Repositories;
 using EerieLeap.Utilities;
 using EerieLeap.Domain.SensorDomain.Models;
+using EerieLeap.Domain.Helpers;
 
 namespace EerieLeap.Domain.SensorDomain.Services;
 
 internal partial class SensorConfigurationService : ISensorConfigurationService {
     private readonly ILogger _logger;
+    private readonly ConfigurationInitializeHelper _configurationInitializeHelper;
     private readonly IConfigurationRepository _repository;
     private readonly ConcurrentDictionary<string, Sensor> _sensors = new();
     private readonly AsyncLock _asyncLock = new();
     private bool _disposed;
 
-    public SensorConfigurationService(ILogger logger, [Required] IConfigurationRepository repository) {
+    public SensorConfigurationService(
+        ILogger logger,
+        [Required] ConfigurationInitializeHelper configurationInitializeHelper,
+        [Required] IConfigurationRepository repository) {
+
         _logger = logger;
+        _configurationInitializeHelper = configurationInitializeHelper;
         _repository = repository;
     }
 
-    public async Task<bool> InitializeAsync() =>
-        _sensors.IsEmpty
-            ? await LoadConfigurationAsync().ConfigureAwait(false)
-            : true;
+    public async Task InitializeAsync(CancellationToken stoppingToken) {
+        if (!_sensors.IsEmpty)
+            return;
+
+        await _configurationInitializeHelper
+            .TryInitialize((CancellationToken st) => LoadConfigurationAsync(st), "Sensor configuration", stoppingToken)
+            .ConfigureAwait(false);
+    }
 
     public IReadOnlyList<SensorConfig> GetConfigurations() {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -105,7 +116,7 @@ internal partial class SensorConfigurationService : ISensorConfigurationService 
         }
     }
 
-    private async Task<bool> LoadConfigurationAsync() {
+    private async Task<bool> LoadConfigurationAsync(CancellationToken stoppingToken) {
         var result = await _repository.LoadAsync<List<SensorConfig>>(AppConstants.SensorsConfigFileName).ConfigureAwait(false);
 
         if (!result.Success) {

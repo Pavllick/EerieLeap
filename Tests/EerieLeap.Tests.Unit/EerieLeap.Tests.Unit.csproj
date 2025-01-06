@@ -37,4 +37,8 @@
     <ProjectReference Include="..\..\EerieLeap\EerieLeap.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Domain\AdcDomain\Hardware\" />
+  </ItemGroup>
+
 </Project>

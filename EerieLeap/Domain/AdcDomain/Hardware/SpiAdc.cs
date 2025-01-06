@@ -1,117 +1,135 @@
-using System.ComponentModel.DataAnnotations;
-using System.Device.Spi;
-using EerieLeap.Configuration;
+//using System.ComponentModel.DataAnnotations;
+//using System.Device.Spi;
+//using System.Device.Gpio;
+//using EerieLeap.Configuration;
 
-namespace EerieLeap.Domain.AdcDomain.Hardware;
+//namespace EerieLeap.Domain.AdcDomain.Hardware;
 
-/// <summary>
-/// Base class for SPI-based ADC implementations
-/// </summary>
-public partial class SpiAdc : IAdc, IDisposable {
-    private readonly ILogger _logger;
-    private SpiDevice? _spiDevice;
-    private AdcConfig? _config;
-    private bool _isDisposed;
+///// <summary>
+///// Base class for SPI-based ADC implementations
+///// </summary>
+//public partial class SpiAdc : IAdc, IDisposable {
+//    private readonly ILogger _logger;
+//    private SpiDevice? _spiDevice;
+//    private GpioController? _gpioController;
+//    private AdcConfig? _config;
+//    private bool _isDisposed;
 
-    public SpiAdc(ILogger logger) =>
-        _logger = logger;
+//    public SpiAdc(ILogger logger) =>
+//        _logger = logger;
 
-    public void Configure([Required] AdcConfig config) {
-        var settings = new SpiConnectionSettings(config.BusId!.Value, config.ChipSelect!.Value) {
-            ClockFrequency = config.ClockFrequency!.Value,
-            Mode = config.Mode!.Value,
-            DataBitLength = config.DataBitLength!.Value
-        };
+//    public void Configure([Required] AdcConfig config, string adcProcessScript = null) {
+//        var settings = new SpiConnectionSettings(config.BusId!.Value, config.ChipSelect!.Value) {
+//            ClockFrequency = config.ClockFrequency!.Value,
+//            Mode = config.Mode!.Value,
+//            DataBitLength = config.DataBitLength!.Value
+//        };
 
-        _spiDevice?.Dispose();
-        _spiDevice = SpiDevice.Create(settings);
-        _config = config;
+//        _spiDevice?.Dispose();
+//        _spiDevice = SpiDevice.Create(settings);
 
-        LogConfiguration(
-            config.Type!,
-            config.BusId!.Value,
-            config.ChipSelect!.Value,
-            config.ClockFrequency!.Value,
-            (int)config.Mode!.Value,
-            config.Resolution!.Value);
+//        _config = config;
 
-        LogProtocol(
-            BitConverter.ToString(config.Protocol!.CommandPrefix!),
-            Convert.ToString(config.Protocol.ChannelMask!.Value, 2).PadLeft(8, '0'),
-            Convert.ToString(config.Protocol.ResultBitMask!.Value, 2),
-            config.Protocol.ReadByteCount!.Value);
-    }
+//        LogConfiguration(
+//            config.Type!,
+//            config.BusId!.Value,
+//            config.ChipSelect!.Value,
+//            config.ClockFrequency!.Value,
+//            (int)config.Mode!.Value,
+//            config.Resolution!.Value);
 
-    public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) =>
-        await Task.Run(() => {
-            var (_, rawValue) = TransferSpi(channel);
-            var voltage = ConvertToVoltage(rawValue);
-            LogChannelReading(channel, rawValue, voltage);
-            return voltage;
-        }, cancellationToken).ConfigureAwait(false);
+//        LogProtocol(
+//            BitConverter.ToString(config.Protocol!.CommandPrefix!),
+//            Convert.ToString(config.Protocol.ChannelMask!.Value, 2).PadLeft(8, '0'),
+//            Convert.ToString(config.Protocol.ResultBitMask!.Value, 2),
+//            config.Protocol.ReadByteCount!.Value);
+//    }
 
-    private (byte[] readBuffer, int rawValue) TransferSpi(int channel) {
-        ObjectDisposedException.ThrowIf(_isDisposed, this);
+//    private void InitializeGpio() {
+//        _gpioController?.Dispose();
+//        _gpioController = new GpioController(PinNumberingScheme.Logical);
 
-        if (_spiDevice == null || _config == null)
-            throw new InvalidOperationException("ADC not configured. Call Configure first.");
+//        var res = _gpioController!.WaitForEvent(1, PinEventTypes.Falling, TimeSpan.FromMicroseconds(1000));
+//        _gpioController!.RegisterCallbackForPinValueChangedEvent(1, PinEventTypes.Rising, (_, _) => { });
+//        _gpioController!.UnregisterCallbackForPinValueChangedEvent(1, (_, _) => { });
 
-        // Prepare command bytes using the protocol configuration
-        var commandByte = (byte)(_config.Protocol!.CommandPrefix!.FirstOrDefault() |
-            ((channel & _config.Protocol!.ChannelMask!.Value) << _config.Protocol!.ChannelBitShift!.Value));
+//        _gpioController!.OpenPin(1, PinMode.Input, PinValue.High);
+//        _gpioController!.ClosePin(1);
 
-        var writeBuffer = new[] { commandByte };
-        var readBuffer = new byte[_config.Protocol!.ReadByteCount!.Value];
+//        _gpioController!.Write(2, PinValue.High);
+//    }
 
-        _spiDevice.TransferFullDuplex(writeBuffer, readBuffer);
+//    public async Task<double> ReadChannelAsync(int channel, CancellationToken cancellationToken = default) =>
+//        await Task.Run(() => {
+//            var (_, rawValue) = TransferSpi(channel);
+//            var voltage = ConvertToVoltage(rawValue);
+//            LogChannelReading(channel, rawValue, voltage);
+//            return voltage;
+//        }, cancellationToken).ConfigureAwait(false);
 
-        // Extract reading using configured bit masks and shifts
-        int rawValue = 0;
-        for (int i = 0; i < readBuffer.Length; i++)
-            rawValue = (rawValue << 8) | readBuffer[i];
+//    private (byte[] readBuffer, int rawValue) TransferSpi(int channel) {
+//        ObjectDisposedException.ThrowIf(_isDisposed, this);
 
-        rawValue = (rawValue >> _config.Protocol!.ResultBitShift!.Value) & _config.Protocol!.ResultBitMask!.Value;
-        return (readBuffer, rawValue);
-    }
+//        if (_spiDevice == null || _config == null)
+//            throw new InvalidOperationException("ADC not configured. Call Configure first.");
 
-    private double ConvertToVoltage(int rawValue) =>
-        _config == null
-            ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
-            : (rawValue * _config.ReferenceVoltage!.Value) / ((1 << _config.Resolution!.Value) - 1);
+//        // Prepare command bytes using the protocol configuration
+//        var commandByte = (byte)(_config.Protocol!.CommandPrefix!.FirstOrDefault() |
+//            ((channel & _config.Protocol!.ChannelMask!.Value) << _config.Protocol!.ChannelBitShift!.Value));
 
-    protected virtual void Dispose(bool disposing) {
-        if (_isDisposed)
-            return;
+//        var writeBuffer = new[] { commandByte };
+//        var readBuffer = new byte[_config.Protocol!.ReadByteCount!.Value];
 
-        if (disposing) {
-            _spiDevice?.Dispose();
-            _spiDevice = null;
-            _config = null;
-        }
+//        _spiDevice.TransferFullDuplex(writeBuffer, readBuffer);
 
-        _isDisposed = true;
-    }
+//        // Extract reading using configured bit masks and shifts
+//        int rawValue = 0;
+//        for (int i = 0; i < readBuffer.Length; i++)
+//            rawValue = (rawValue << 8) | readBuffer[i];
 
-    public void Dispose() {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+//        rawValue = (rawValue >> _config.Protocol!.ResultBitShift!.Value) & _config.Protocol!.ResultBitMask!.Value;
+//        return (readBuffer, rawValue);
+//    }
 
-    #region Loggers
+//    private double ConvertToVoltage(int rawValue) =>
+//        _config == null
+//            ? throw new InvalidOperationException("ADC not configured. Call Configure first.")
+//            : (rawValue * _config.ReferenceVoltage!.Value) / ((1 << _config.Resolution!.Value) - 1);
 
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "Configured ADC: Type={type}, Bus={bus}, CS={cs}, Clock={clock}Hz, Mode={mode}, Resolution={resolution}bit")]
-    private partial void LogConfiguration(
-        string type, int bus, int cs, int clock, int mode, int resolution);
+//    protected virtual void Dispose(bool disposing) {
+//        if (_isDisposed)
+//            return;
 
-    [LoggerMessage(Level = LogLevel.Debug,
-        Message = "ADC Protocol: CommandPrefix={prefix}, ChannelMask={channelMask}, ResultMask={resultMask}, ReadBytes={readBytes}")]
-    private partial void LogProtocol(
-        string prefix, string channelMask, string resultMask, int readBytes);
+//        if (disposing) {
+//            _spiDevice?.Dispose();
+//            _gpioController?.Dispose();
+//            _spiDevice = null;
+//            _config = null;
+//        }
 
-    [LoggerMessage(Level = LogLevel.Trace,
-        Message = "Channel {channel}: Raw={raw}, Voltage={voltage:F3}V")]
-    private partial void LogChannelReading(int channel, int raw, double voltage);
+//        _isDisposed = true;
+//    }
 
-    #endregion
-}
+//    public void Dispose() {
+//        Dispose(true);
+//        GC.SuppressFinalize(this);
+//    }
+
+//    #region Loggers
+
+//    [LoggerMessage(Level = LogLevel.Information,
+//        Message = "Configured ADC: Type={type}, Bus={bus}, CS={cs}, Clock={clock}Hz, Mode={mode}, Resolution={resolution}bit")]
+//    private partial void LogConfiguration(
+//        string type, int bus, int cs, int clock, int mode, int resolution);
+
+//    [LoggerMessage(Level = LogLevel.Debug,
+//        Message = "ADC Protocol: CommandPrefix={prefix}, ChannelMask={channelMask}, ResultMask={resultMask}, ReadBytes={readBytes}")]
+//    private partial void LogProtocol(
+//        string prefix, string channelMask, string resultMask, int readBytes);
+
+//    [LoggerMessage(Level = LogLevel.Trace,
+//        Message = "Channel {channel}: Raw={raw}, Voltage={voltage:F3}V")]
+//    private partial void LogChannelReading(int channel, int raw, double voltage);
+
+//    #endregion
+//}

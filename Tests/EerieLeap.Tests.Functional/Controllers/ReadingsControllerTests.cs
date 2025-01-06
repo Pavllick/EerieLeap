@@ -7,14 +7,12 @@ using Xunit.Abstractions;
 
 namespace EerieLeap.Tests.Functional.Controllers;
 
+[Collection("Sequential")]
 public class ReadingsControllerTests : FunctionalTestBase, IAsyncLifetime {
     private readonly ITestOutputHelper _output;
 
-    public ReadingsControllerTests(
-        TestWebApplicationFactory factory,
-        ITestOutputHelper output) : base(factory) {
+    public ReadingsControllerTests(ITestOutputHelper output) =>
         _output = output;
-    }
 
     public async Task InitializeAsync() =>
         await ConfigureAdc();

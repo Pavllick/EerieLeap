@@ -51,10 +51,12 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
         _initializationTcs = new TaskCompletionSource<bool>();
 
         try {
-            await TryInitialize(_adcService.InitializeAsync, "ADC").ConfigureAwait(false);
-            await TryInitialize(_sensorsConfigService.InitializeAsync, "Sensors").ConfigureAwait(false);
+            using (var releaser = await _asyncLock.LockAsync(stoppingToken).ConfigureAwait(false)) {
+                await _adcService.InitializeAsync(stoppingToken).ConfigureAwait(false);
+                await _sensorsConfigService.InitializeAsync(stoppingToken).ConfigureAwait(false);
 
-            _initializationTcs.TrySetResult(true);
+                _initializationTcs.TrySetResult(true);
+            }
 
             while (!stoppingToken.IsCancellationRequested) {
                 try {
@@ -71,24 +73,6 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
         } catch (Exception ex) {
             _initializationTcs.TrySetException(ex);
             throw;
-        }
-
-        async Task TryInitialize(Func<Task<bool>> action, string moduleName) {
-            try {
-                if (!await action().ConfigureAwait(false))
-                    ConfigurationInitializationError(moduleName);
-                else
-                    return;
-            } catch (Exception ex) {
-                InitializationError(moduleName);
-            }
-
-            await Task.Delay(_settings.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
-
-            try {
-                while (!await action().ConfigureAwait(false))
-                    await Task.Delay(_settings.ConfigurationLoadRetryMs, stoppingToken).ConfigureAwait(false);
-            } catch { }
         }
     }
 
@@ -128,15 +112,11 @@ internal sealed partial class SensorReadingService : BackgroundService, ISensorR
 
     public sealed override void Dispose() {
         _asyncLock.Dispose();
+
         base.Dispose();
     }
 
     #region Loggers
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to initialize {moduleName}")]
-    private partial void InitializationError(string moduleName);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to load {moduleName} configuration")]
-    private partial void ConfigurationInitializationError(string moduleName);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to update sensor readings")]
     private partial void LogUpdateReadingsError(Exception ex);

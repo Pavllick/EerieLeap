@@ -1,11 +1,12 @@
 namespace EerieLeap;
 
-internal static class AppConstants {
+public static class AppConstants {
     public static string ConfigDirPath => GetConfigDirPath();
 
     public const string SettingsConfigFileName = "settings";
     public const string AdcConfigFileName = "adc";
     public const string SensorsConfigFileName = "sensors";
+    public const string AdcConfigScriptFileName = "adc_config_script";
 
     private static string GetConfigDirPath() {
         string configDirPath;

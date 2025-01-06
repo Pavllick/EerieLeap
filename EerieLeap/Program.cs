@@ -9,6 +9,8 @@ using EerieLeap.Domain.SensorDomain.Processing;
 using EerieLeap.Domain.SensorDomain.Processing.SensorTypeProcessors;
 using Microsoft.AspNetCore.Builder;
 using System.Text.Json;
+using EerieLeap.Domain.Helpers;
+using EerieLeap.Controllers.ModelBinders;
 
 namespace EerieLeap;
 
@@ -18,8 +20,10 @@ public sealed class Program {
 
         // Add services to the container.
         builder.Services
-            .AddControllers(options =>
-                options.Filters.Add<ValidationExceptionFilter>())
+            .AddControllers(options => {
+                options.ModelBinderProviders.Insert(0, new RawStringModelBinderProvider());
+                options.Filters.Add<ValidationExceptionFilter>();
+            })
             .AddJsonOptions(options => {
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.IncludeFields = true;
@@ -34,12 +38,13 @@ public sealed class Program {
 
         // Register services
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddSingleton<AdcFactory>();
+        builder.Services.AddSingleton<IAdc, Adc>();
 
         // Register configuration repository
         builder.Services.AddSingleton<IConfigurationRepository, JsonConfigurationRepository>();
 
         // Register configuration services
+        builder.Services.AddSingleton<ConfigurationInitializeHelper>();
         builder.Services.AddSingleton<IAdcConfigurationService, AdcConfigurationService>();
         builder.Services.AddSingleton<ISensorConfigurationService, SensorConfigurationService>();
 
