@@ -95,7 +95,7 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
 
         await File.WriteAllTextAsync(GetConfigurationScritpPath(), processingScript, stoppingToken).ConfigureAwait(false);
 
-        LogConfigurationUpdated();
+        LogProcessingScriptUpdated();
     }
 
     private async Task<bool> LoadConfigurationAsync() {
@@ -118,6 +118,9 @@ internal sealed partial class AdcConfigurationService : IAdcConfigurationService
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Updated ADC configuration")]
     private partial void LogConfigurationUpdated();
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Updated ADC processing script")]
+    private partial void LogProcessingScriptUpdated();
 
     #endregion
 }

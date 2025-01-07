@@ -8,7 +8,7 @@
 ///// <summary>
 ///// Base class for SPI-based ADC implementations
 ///// </summary>
-//public partial class SpiAdc : IAdc, IDisposable {
+//public partial class SpiAdc : IDisposable {
 //    private readonly ILogger _logger;
 //    private SpiDevice? _spiDevice;
 //    private GpioController? _gpioController;

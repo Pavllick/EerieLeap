@@ -1,6 +1,6 @@
 namespace ScriptInterpreter;
 
-public class MethodInfo {
+public class MethodInfo : IMethodInfo {
     public required string Name { get; set; }
     public bool IsOptional { get; set; }
     public bool IsAvailable { get; set; }
