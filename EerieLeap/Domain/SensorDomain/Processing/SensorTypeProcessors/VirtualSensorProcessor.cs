@@ -40,7 +40,8 @@ internal partial class VirtualSensorProcessor : ISensorReadingProcessor {
             reading.UpdateValue(value);
             _buffer.AddReading(reading);
         } catch (Exception ex) when (ex is ArgumentException or InvalidOperationException) {
-            LogVirtualSensorError(reading.Sensor.Id.Value, ex);
+            LogVirtualSensorError(reading.Sensor.Id.Value, ex.Message);
+            LogExceptionDetails(ex);
             reading.MarkAsError(ex.Message);
         }
 
@@ -48,10 +49,17 @@ internal partial class VirtualSensorProcessor : ISensorReadingProcessor {
     }
 
     #region Loggers
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Expression not specified for virtual sensor {sensorId}")]
     private partial void LogExpressionNotSpecified(string sensorId);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to process virtual sensor {sensorId}")]
-    private partial void LogVirtualSensorError(string sensorId, Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to process virtual sensor {sensorId}. {exceptionMessage}")]
+    private partial void LogVirtualSensorError(string sensorId, string exceptionMessage);
+
+    // Debug loggers
+
+    [LoggerMessage(Level = LogLevel.Debug)]
+    private partial void LogExceptionDetails(Exception ex);
+
     #endregion
 }

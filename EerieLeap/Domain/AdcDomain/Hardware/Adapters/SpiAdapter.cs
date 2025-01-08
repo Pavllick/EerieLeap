@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Device.Spi;
 using EerieLeap.Configuration;
@@ -8,8 +7,6 @@ namespace EerieLeap.Domain.AdcDomain.Hardware.Adapters;
 public partial class SpiAdapter : IDisposable {
     private readonly ILogger _logger;
     private bool _isDisposed;
-
-    internal static Collection<SpiAdapter> AllInstances { get; } = new();
 
     private readonly SpiDevice? _spiDevice;
     private readonly AdcConfig? _adcConfig;
@@ -27,12 +24,8 @@ public partial class SpiAdapter : IDisposable {
         LogAdapterCreated();
     }
 
-    internal static SpiAdapter Create([Required] ILogger logger, [Required] AdcConfig adcConfig) {
-        var spiAdapter = new SpiAdapter(logger, adcConfig);
-        AllInstances.Add(spiAdapter);
-
-        return spiAdapter;
-    }
+    internal static SpiAdapter Create([Required] ILogger logger, [Required] AdcConfig adcConfig) =>
+        new SpiAdapter(logger, adcConfig);
 
     internal static Type[] GetTypesToRegister() => [
         typeof(SpiAdapter)

@@ -1,6 +1,7 @@
 using EerieLeap.Configuration;
 using EerieLeap.Domain.AdcDomain.Hardware.Adapters;
 using ScriptInterpreter;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace EerieLeap.Domain.AdcDomain.Hardware;
@@ -14,6 +15,9 @@ public partial class Adc : IAdc {
     private readonly MethodInfo _initMethodInfo;
     private readonly MethodInfo<double> _processMethodInfo;
     private readonly MethodInfo _disposeMethodInfo;
+
+    private Collection<GpioAdapter> _gpioAdapters { get; } = new();
+    private Collection<SpiAdapter> _spiAdapters { get; } = new();
 
     public Adc(ILogger logger) {
         _logger = logger;
@@ -37,11 +41,29 @@ public partial class Adc : IAdc {
         var hostTypes = SpiAdapter.GetTypesToRegister()
             .Concat(GpioAdapter.GetTypesToRegister());
 
+        var gpioAdapterCreateCallback = new Func<GpioAdapter>(() => {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+                LogAdapterNotSupportedError("GPIO", "Windows");
+
+                return null;
+            }
+
+            var gpioAdapter = GpioAdapter.Create(_logger, _scriptInterpreter!);
+            _gpioAdapters.Add(gpioAdapter);
+
+            return gpioAdapter;
+        });
+
+        var spiAdapterCreateCallback = new Func<SpiAdapter>(() => {
+            var spiAdapter = SpiAdapter.Create(_logger, _adcConfig!);
+            _spiAdapters.Add(spiAdapter);
+
+            return spiAdapter;
+        });
+
         var hostObjects = new Dictionary<string, object>() {
-            { nameof(SpiAdapter), new {
-                Create = new Func<SpiAdapter>(() => SpiAdapter.Create(_logger, _adcConfig!))}},
-            { nameof(GpioAdapter), new {
-                Create = new Func<GpioAdapter>(() => GpioAdapter.Create(_logger, _scriptInterpreter!))}}};
+            { nameof(GpioAdapter), new { Create = gpioAdapterCreateCallback}},
+            { nameof(SpiAdapter), new { Create = spiAdapterCreateCallback }}};
 
         _scriptInterpreter = new Interpreter([_initMethodInfo, _processMethodInfo, _disposeMethodInfo], hostTypes, hostObjects);
     }
@@ -50,13 +72,13 @@ public partial class Adc : IAdc {
         _adcConfig = config;
 
     public void UpdateProcessingScript([Required] string adcProcessScript) {
-        foreach (var gpioAdapter in GpioAdapter.AllInstances)
+        foreach (var gpioAdapter in _gpioAdapters)
             gpioAdapter.Dispose();
-        GpioAdapter.AllInstances.Clear();
+        _gpioAdapters.Clear();
 
-        foreach (var spiAdapter in SpiAdapter.AllInstances)
+        foreach (var spiAdapter in _spiAdapters)
             spiAdapter.Dispose();
-        SpiAdapter.AllInstances.Clear();
+        _spiAdapters.Clear();
 
         _scriptInterpreter.UpdateScript(adcProcessScript);
 
@@ -64,7 +86,8 @@ public partial class Adc : IAdc {
             try {
                 _initMethodInfo.Execute();
             } catch(Exception ex) {
-                LogExecuteScriptError(_initMethodInfo.Name, ex);
+                LogExecuteScriptError(_initMethodInfo.Name, ex.Message);
+                LogExceptionDetails(ex);
             }
         }
     }
@@ -87,7 +110,8 @@ public partial class Adc : IAdc {
             try {
                 _disposeMethodInfo.Execute();
             } catch (Exception ex) {
-                LogExecuteScriptError(_disposeMethodInfo.Name, ex);
+                LogExecuteScriptError(_disposeMethodInfo.Name, ex.Message);
+                LogExceptionDetails(ex);
             }
         }
 
@@ -98,8 +122,16 @@ public partial class Adc : IAdc {
 
     #region Loggers
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to execute script method '{scriptMethodName}'.")]
-    private partial void LogExecuteScriptError(string scriptMethodName, Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to execute script method '{scriptMethodName}'. {exceptionMessage}")]
+    private partial void LogExecuteScriptError(string scriptMethodName, string exceptionMessage);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "{adapterType} adapter is not supported on {systemName}.")]
+    private partial void LogAdapterNotSupportedError(string adapterType, string systemName);
+
+    // Debug loggers
+
+    [LoggerMessage(Level = LogLevel.Debug)]
+    private partial void LogExceptionDetails(Exception ex);
 
     #endregion
 }

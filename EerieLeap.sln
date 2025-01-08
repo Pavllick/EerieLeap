@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidationProcessor", "Vali
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptInterpreter", "ScriptInterpreter\ScriptInterpreter.csproj", "{F2265158-9F76-427B-B9C1-FA6155718376}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B1A85260-5A99-4E69-A056-62C5F19D4A8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptInterpreter.Tests.Unit", "ValidationProcessor.Tests.Unit\ScriptInterpreter.Tests.Unit.csproj", "{A227C759-F48C-4782-95D1-392D160CF826}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,8 +43,17 @@ Global
 		{F2265158-9F76-427B-B9C1-FA6155718376}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2265158-9F76-427B-B9C1-FA6155718376}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2265158-9F76-427B-B9C1-FA6155718376}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A227C759-F48C-4782-95D1-392D160CF826}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A227C759-F48C-4782-95D1-392D160CF826}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A227C759-F48C-4782-95D1-392D160CF826}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A227C759-F48C-4782-95D1-392D160CF826}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C8CDA9FD-41C1-45E5-AFCC-188C25A4C5B9} = {B1A85260-5A99-4E69-A056-62C5F19D4A8F}
+		{2F2558C9-936C-4EDF-9BAE-3B99AB742F7D} = {B1A85260-5A99-4E69-A056-62C5F19D4A8F}
+		{A227C759-F48C-4782-95D1-392D160CF826} = {B1A85260-5A99-4E69-A056-62C5F19D4A8F}
 	EndGlobalSection
 EndGlobal

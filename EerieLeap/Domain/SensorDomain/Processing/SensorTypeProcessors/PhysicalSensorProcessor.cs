@@ -55,16 +55,24 @@ internal partial class PhysicalSensorProcessor : ISensorReadingProcessor {
 
             _buffer.AddReading(reading);
         } catch (Exception ex) when (ex is InvalidOperationException or ArgumentOutOfRangeException or TimeoutException) {
-            LogReadSensorError(reading.Sensor.Id.Value, ex);
+            LogReadSensorError(reading.Sensor.Id.Value, ex.Message);
+            LogExceptionDetails(ex);
             reading.MarkAsError(ex.Message);
         }
     }
 
     #region Loggers
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Channel not specified for physical sensor {sensorId}")]
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Channel not specified for physical sensor {sensorId}.")]
     private partial void LogChannelNotSpecified(string sensorId);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to read physical sensor {sensorId}")]
-    private partial void LogReadSensorError(string sensorId, Exception ex);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to process physical sensor {sensorId}. {exceptionMessage}")]
+    private partial void LogReadSensorError(string sensorId, string exceptionMessage);
+
+    // Debug loggers
+
+    [LoggerMessage(Level = LogLevel.Debug)]
+    private partial void LogExceptionDetails(Exception ex);
+
     #endregion
 }

@@ -1,3 +1,5 @@
+using ScriptInterpreter.Utilities;
+
 namespace ScriptInterpreter;
 
 public class MethodInfo : IMethodInfo {
@@ -13,14 +15,23 @@ public class MethodInfo : IMethodInfo {
             throw new InvalidOperationException($"Function '{Name}' is not available in the script.");
 
         if (Parameters.Select(p => !p.IsOptional).Count() > args.Length || Parameters.Length < args.Length)
-            throw new InvalidOperationException($"Function '{Name}' requires {Parameters.Length} parameters.");
+            throw new ArgumentException($"Function '{Name}' requires {Parameters.Length} parameters.");
 
         for (int i = 0; i < args.Length; i++) {
             if (!Parameters[i].Type.IsInstanceOfType(args[i]))
-                throw new InvalidOperationException($"Parameter '{Parameters[i].Name}' must be of type '{Parameters[i].Type.Name}'.");
+                throw new ArgumentException($"Parameter '{Parameters[i].Name}' must be of type '{Parameters[i].Type.Name}'.");
         }
 
         return ExcecuteHandler(args);
+    }
+
+    public T Execute<T>(params object[] args) {
+        var result = Execute(args);
+
+        if (!TypeConverter.TryConvert(result, out T value))
+            throw new InvalidOperationException($"Cannot convert result of type '{result.GetType().Name}' to '{typeof(T).Name}'.");
+
+        return value;
     }
 
     public void SetExcecuteHandler(Func<object[], object> handler) {
@@ -35,36 +46,7 @@ public class MethodInfo : IMethodInfo {
 }
 
 public class MethodInfo<T> : MethodInfo {
-    public new T Execute(params object[] args) {
-        var result = base.Execute(args);
-
-        if (!Converter.TryConvert(result, out T value))
-            throw new InvalidOperationException($"Cannot convert result of type '{result.GetType().Name}' to '{typeof(T).Name}'.");
-
-        return value;
-    }
+    public new T Execute(params object[] args) =>
+        Execute<T>(args);
 }
 
-public static class Converter {
-    public static bool TryConvert<T>(object input, out T result) {
-        try {
-            if (input is T typedInput) {
-                result = typedInput;
-                return true;
-            }
-
-            if (typeof(T).IsPrimitive || typeof(T) == typeof(string)) {
-                result = (T)Convert.ChangeType(input, typeof(T));
-                return true;
-            }
-
-            result = default;
-
-            return false;
-        } catch {
-            result = default;
-
-            return false;
-        }
-    }
-}

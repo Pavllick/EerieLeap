@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Device.Gpio;
 using ScriptInterpreter;
 
@@ -7,8 +6,6 @@ namespace EerieLeap.Domain.AdcDomain.Hardware.Adapters;
 public partial class GpioAdapter : IDisposable {
     private readonly ILogger _logger;
     private bool _isDisposed;
-
-    internal static Collection<GpioAdapter> AllInstances { get; } = new();
 
     private readonly Interpreter _scriptInterpreter;
     private readonly GpioController _gpioController;
@@ -26,12 +23,8 @@ public partial class GpioAdapter : IDisposable {
         _pinChangeEventHandlers = new();
     }
 
-    internal static GpioAdapter Create(ILogger logger, Interpreter scriptInterpreter) {
-        var gpioAdapter = new GpioAdapter(logger, scriptInterpreter);
-        AllInstances.Add(gpioAdapter);
-
-        return gpioAdapter;
-    }
+    internal static GpioAdapter Create(ILogger logger, Interpreter scriptInterpreter) =>
+        new GpioAdapter(logger, scriptInterpreter);
 
     internal static Type[] GetTypesToRegister() => [
         typeof(GpioAdapter),
