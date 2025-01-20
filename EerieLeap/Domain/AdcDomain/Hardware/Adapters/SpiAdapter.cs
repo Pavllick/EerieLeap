@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Device.Spi;
 using EerieLeap.Configuration;
+using Microsoft.ClearScript.JavaScript;
 
 namespace EerieLeap.Domain.AdcDomain.Hardware.Adapters;
 
@@ -41,18 +42,20 @@ public partial class SpiAdapter : IDisposable {
     /// <summary>
     /// Reads data from the SPI device.
     /// </summary>
-    /// <param name="buffer">
-    /// The buffer to read the data from the SPI device.
-    /// The length of the buffer determines how much data to read from the SPI device.
-    /// </param>
-    public void Read(byte[] buffer) =>
-        _spiDevice!.Read(buffer);
+    /// <param name="bytesToRead">Number of bytes to read the data from the SPI device.</param>
+    /// <returns>Byte array read from the SPI device.</returns>
+    public byte[] Read([Required] int bytesToRead) {
+        Span<byte> readBuff = stackalloc byte[bytesToRead];
+        _spiDevice!.Read(readBuff);
+
+        return readBuff.ToArray();
+    }
 
     /// <summary>
     /// Writes a byte to the SPI device.
     /// </summary>
     /// <param name="value">The byte to be written to the SPI device.</param>
-    public void WriteByte(byte value) =>
+    public void WriteByte([Required] byte value) =>
         _spiDevice!.WriteByte(value);
 
     /// <summary>
@@ -61,16 +64,20 @@ public partial class SpiAdapter : IDisposable {
     /// <param name="buffer">
     /// The buffer that contains the data to be written to the SPI device.
     /// </param>
-    public void Write(byte[] buffer) =>
-        _spiDevice!.Write(buffer);
+    public void Write([Required] ITypedArray<byte> buffer) =>
+        _spiDevice!.Write(buffer.ToArray());
 
     /// <summary>
     /// Writes and reads data from the SPI device.
     /// </summary>
     /// <param name="writeBuffer">The buffer that contains the data to be written to the SPI device.</param>
-    /// <param name="readBuffer">The buffer to read the data from the SPI device.</param>
-    public void TransferFullDuplex(byte[] writeBuffer, byte[] readBuffer) =>
-        _spiDevice!.TransferFullDuplex(writeBuffer, readBuffer);
+    /// <param name="bytesToRead">Number of bytes to read the data from the SPI device.</param>
+    public byte[] TransferFullDuplex([Required] ITypedArray<byte> writeBuffer, [Required] int bytesToRead) {
+        Span<byte> readBuff = stackalloc byte[bytesToRead];
+        _spiDevice!.TransferFullDuplex(writeBuffer.ToArray(), readBuff);
+
+        return readBuff.ToArray();
+    }
 
     protected virtual void Dispose(bool disposing) {
         if (_isDisposed)

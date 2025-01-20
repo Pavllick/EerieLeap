@@ -36,6 +36,22 @@ public partial class GpioAdapter : IDisposable {
     ];
 
     /// <summary>
+    /// Opens a pin in order for it to be ready to use.
+    /// The driver attempts to open the pin without changing its mode or value.
+    /// </summary>
+    /// <param name="pinNumber">The pin number in the controller's numbering scheme.</param>
+    public GpioPin OpenPin(int pinNumber) =>
+        _gpioController!.OpenPin(pinNumber);
+
+    /// <summary>
+    /// Opens a pin and sets it to a specific mode.
+    /// </summary>
+    /// <param name="pinNumber">The pin number in the controller's numbering scheme.</param>
+    /// <param name="mode">The mode to be set.</param>
+    public GpioPin OpenPin(int pinNumber, PinMode mode) =>
+        _gpioController!.OpenPin(pinNumber, mode);
+
+    /// <summary>
     /// Opens a pin and sets it to a specific mode and value.
     /// </summary>
     /// <param name="pinNumber">The pin number in the controller's numbering scheme.</param>
